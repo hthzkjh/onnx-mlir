@@ -1,0 +1,540 @@
+module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128", llvm.target_triple = "x86_64-unknown-linux-gnu"} {
+  func @main_graph(%arg0: tensor<1x500x256xf32>, %arg1: tensor<1x1x500xi1>) -> tensor<?x?xf32> attributes {input_names = ["input", "mask"], output_names = ["melspec"]} {
+    %0 = "onnx.Constant"() {onnx_node_name = "Constant_0", value = dense<1.600000e+01> : tensor<f32>} : () -> tensor<f32>
+    %1 = "onnx.Mul"(%arg0, %0) {onnx_node_name = "Mul_1"} : (tensor<1x500x256xf32>, tensor<f32>) -> tensor<1x500x256xf32>
+    %2 = "onnx.Constant"() {value = dense<[1, 500, 256]> : tensor<3xi64>} : () -> tensor<3xi64>
+    %3 = "onnx.Constant"() {onnx_node_name = "Constant_3", value = dense<1> : tensor<i64>} : () -> tensor<i64>
+    %4 = "onnx.Gather"(%2, %3) {axis = 0 : si64, onnx_node_name = "Gather_4"} : (tensor<3xi64>, tensor<i64>) -> tensor<i64>
+    %5 = "onnx.Constant"() {onnx_node_name = "Constant_5", value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<1x5000x256xf32>} : () -> tensor<1x5000x256xf32>
+    %6 = "onnx.UnsqueezeV11"(%4) {axes = [0], onnx_node_name = "Unsqueeze_6"} : (tensor<i64>) -> tensor<1xi64>
+    %7 = "onnx.Constant"() {onnx_node_name = "Constant_7", value = dense<1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %8 = "onnx.Constant"() {value = dense<0> : tensor<1xi64>} : () -> tensor<1xi64>
+    %9 = "onnx.Constant"() {value = dense<1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %10 = "onnx.Slice"(%5, %8, %6, %9, %7) {onnx_node_name = "Slice_8"} : (tensor<1x5000x256xf32>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<1x?x256xf32>
+    %11 = "onnx.ReduceMean"(%1) {axes = [-1], onnx_node_name = "ReduceMean_9"} : (tensor<1x500x256xf32>) -> tensor<1x500x1xf32>
+    %12 = "onnx.Sub"(%1, %11) {onnx_node_name = "Sub_10"} : (tensor<1x500x256xf32>, tensor<1x500x1xf32>) -> tensor<1x500x256xf32>
+    %13 = "onnx.Constant"() {onnx_node_name = "Constant_11", value = dense<2.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %14 = "onnx.Pow"(%12, %13) {onnx_node_name = "Pow_12"} : (tensor<1x500x256xf32>, tensor<f32>) -> tensor<1x500x256xf32>
+    %15 = "onnx.ReduceMean"(%14) {axes = [-1], onnx_node_name = "ReduceMean_13"} : (tensor<1x500x256xf32>) -> tensor<1x500x1xf32>
+    %16 = "onnx.Constant"() {onnx_node_name = "Constant_14", value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+    %17 = "onnx.Add"(%15, %16) {onnx_node_name = "Add_15"} : (tensor<1x500x1xf32>, tensor<f32>) -> tensor<1x500x1xf32>
+    %18 = "onnx.Sqrt"(%17) {onnx_node_name = "Sqrt_16"} : (tensor<1x500x1xf32>) -> tensor<1x500x1xf32>
+    %19 = "onnx.Div"(%12, %18) {onnx_node_name = "Div_17"} : (tensor<1x500x256xf32>, tensor<1x500x1xf32>) -> tensor<1x500x256xf32>
+    %20 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %21 = "onnx.Mul"(%19, %20) {onnx_node_name = "Mul_18"} : (tensor<1x500x256xf32>, tensor<256xf32>) -> tensor<1x500x256xf32>
+    %22 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %23 = "onnx.Add"(%21, %22) {onnx_node_name = "Add_19"} : (tensor<1x500x256xf32>, tensor<256xf32>) -> tensor<1x500x256xf32>
+    %24 = "onnx.Transpose"(%23) {onnx_node_name = "Transpose_20", perm = [0, 2, 1]} : (tensor<1x500x256xf32>) -> tensor<1x256x500xf32>
+    %25 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512x256x3xf32>} : () -> tensor<512x256x3xf32>
+    %26 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512xf32>} : () -> tensor<512xf32>
+    %27 = "onnx.Conv"(%24, %25, %26) {dilations = [1], group = 1 : si64, kernel_shape = [3], onnx_node_name = "Conv_21", pads = [1, 1], strides = [1]} : (tensor<1x256x500xf32>, tensor<512x256x3xf32>, tensor<512xf32>) -> tensor<1x512x500xf32>
+    %28 = "onnx.Relu"(%27) {onnx_node_name = "Relu_22"} : (tensor<1x512x500xf32>) -> tensor<1x512x500xf32>
+    %29 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x512x3xf32>} : () -> tensor<256x512x3xf32>
+    %30 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %31 = "onnx.Conv"(%28, %29, %30) {dilations = [1], group = 1 : si64, kernel_shape = [3], onnx_node_name = "Conv_23", pads = [1, 1], strides = [1]} : (tensor<1x512x500xf32>, tensor<256x512x3xf32>, tensor<256xf32>) -> tensor<1x256x500xf32>
+    %32 = "onnx.Transpose"(%31) {onnx_node_name = "Transpose_24", perm = [0, 2, 1]} : (tensor<1x256x500xf32>) -> tensor<1x500x256xf32>
+    %33 = "onnx.Constant"() {onnx_node_name = "Constant_25", value = dense<5.000000e-01> : tensor<f32>} : () -> tensor<f32>
+    %34 = "onnx.Mul"(%32, %33) {onnx_node_name = "Mul_26"} : (tensor<1x500x256xf32>, tensor<f32>) -> tensor<1x500x256xf32>
+    %35 = "onnx.Add"(%1, %34) {onnx_node_name = "Add_27"} : (tensor<1x500x256xf32>, tensor<1x500x256xf32>) -> tensor<1x500x256xf32>
+    %36 = "onnx.ReduceMean"(%35) {axes = [-1], onnx_node_name = "ReduceMean_28"} : (tensor<1x500x256xf32>) -> tensor<1x500x1xf32>
+    %37 = "onnx.Sub"(%35, %36) {onnx_node_name = "Sub_29"} : (tensor<1x500x256xf32>, tensor<1x500x1xf32>) -> tensor<1x500x256xf32>
+    %38 = "onnx.Constant"() {onnx_node_name = "Constant_30", value = dense<2.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %39 = "onnx.Pow"(%37, %38) {onnx_node_name = "Pow_31"} : (tensor<1x500x256xf32>, tensor<f32>) -> tensor<1x500x256xf32>
+    %40 = "onnx.ReduceMean"(%39) {axes = [-1], onnx_node_name = "ReduceMean_32"} : (tensor<1x500x256xf32>) -> tensor<1x500x1xf32>
+    %41 = "onnx.Constant"() {onnx_node_name = "Constant_33", value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+    %42 = "onnx.Add"(%40, %41) {onnx_node_name = "Add_34"} : (tensor<1x500x1xf32>, tensor<f32>) -> tensor<1x500x1xf32>
+    %43 = "onnx.Sqrt"(%42) {onnx_node_name = "Sqrt_35"} : (tensor<1x500x1xf32>) -> tensor<1x500x1xf32>
+    %44 = "onnx.Div"(%37, %43) {onnx_node_name = "Div_36"} : (tensor<1x500x256xf32>, tensor<1x500x1xf32>) -> tensor<1x500x256xf32>
+    %45 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %46 = "onnx.Mul"(%44, %45) {onnx_node_name = "Mul_37"} : (tensor<1x500x256xf32>, tensor<256xf32>) -> tensor<1x500x256xf32>
+    %47 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %48 = "onnx.Add"(%46, %47) {onnx_node_name = "Add_38"} : (tensor<1x500x256xf32>, tensor<256xf32>) -> tensor<1x500x256xf32>
+    %49 = "onnx.Constant"() {value = dense<[1, 500, 256]> : tensor<3xi64>} : () -> tensor<3xi64>
+    %50 = "onnx.Constant"() {onnx_node_name = "Constant_40", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %51 = "onnx.Gather"(%49, %50) {axis = 0 : si64, onnx_node_name = "Gather_41"} : (tensor<3xi64>, tensor<i64>) -> tensor<i64>
+    %52 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256xf32>} : () -> tensor<256x256xf32>
+    %53 = "onnx.MatMul"(%48, %52) {onnx_node_name = "MatMul_42"} : (tensor<1x500x256xf32>, tensor<256x256xf32>) -> tensor<1x500x256xf32>
+    %54 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %55 = "onnx.Add"(%53, %54) {onnx_node_name = "Add_43"} : (tensor<1x500x256xf32>, tensor<256xf32>) -> tensor<1x500x256xf32>
+    %56 = "onnx.UnsqueezeV11"(%51) {axes = [0], onnx_node_name = "Unsqueeze_44"} : (tensor<i64>) -> tensor<1xi64>
+    %57 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %58 = "onnx.Constant"() {value = dense<2> : tensor<1xi64>} : () -> tensor<1xi64>
+    %59 = "onnx.Constant"() {value = dense<128> : tensor<1xi64>} : () -> tensor<1xi64>
+    %60 = "onnx.Concat"(%56, %57, %58, %59) {axis = 0 : si64, onnx_node_name = "Concat_45"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %61 = "onnx.Reshape"(%55, %60) {onnx_node_name = "Reshape_46"} : (tensor<1x500x256xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %62 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256xf32>} : () -> tensor<256x256xf32>
+    %63 = "onnx.MatMul"(%48, %62) {onnx_node_name = "MatMul_47"} : (tensor<1x500x256xf32>, tensor<256x256xf32>) -> tensor<1x500x256xf32>
+    %64 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %65 = "onnx.Add"(%63, %64) {onnx_node_name = "Add_48"} : (tensor<1x500x256xf32>, tensor<256xf32>) -> tensor<1x500x256xf32>
+    %66 = "onnx.UnsqueezeV11"(%51) {axes = [0], onnx_node_name = "Unsqueeze_49"} : (tensor<i64>) -> tensor<1xi64>
+    %67 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %68 = "onnx.Constant"() {value = dense<2> : tensor<1xi64>} : () -> tensor<1xi64>
+    %69 = "onnx.Constant"() {value = dense<128> : tensor<1xi64>} : () -> tensor<1xi64>
+    %70 = "onnx.Concat"(%66, %67, %68, %69) {axis = 0 : si64, onnx_node_name = "Concat_50"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %71 = "onnx.Reshape"(%65, %70) {onnx_node_name = "Reshape_51"} : (tensor<1x500x256xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %72 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256xf32>} : () -> tensor<256x256xf32>
+    %73 = "onnx.MatMul"(%48, %72) {onnx_node_name = "MatMul_52"} : (tensor<1x500x256xf32>, tensor<256x256xf32>) -> tensor<1x500x256xf32>
+    %74 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %75 = "onnx.Add"(%73, %74) {onnx_node_name = "Add_53"} : (tensor<1x500x256xf32>, tensor<256xf32>) -> tensor<1x500x256xf32>
+    %76 = "onnx.UnsqueezeV11"(%51) {axes = [0], onnx_node_name = "Unsqueeze_54"} : (tensor<i64>) -> tensor<1xi64>
+    %77 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %78 = "onnx.Constant"() {value = dense<2> : tensor<1xi64>} : () -> tensor<1xi64>
+    %79 = "onnx.Constant"() {value = dense<128> : tensor<1xi64>} : () -> tensor<1xi64>
+    %80 = "onnx.Concat"(%76, %77, %78, %79) {axis = 0 : si64, onnx_node_name = "Concat_55"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %81 = "onnx.Reshape"(%75, %80) {onnx_node_name = "Reshape_56"} : (tensor<1x500x256xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %82 = "onnx.Transpose"(%81) {onnx_node_name = "Transpose_57", perm = [0, 2, 1, 3]} : (tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+    %83 = "onnx.Shape"(%10) {onnx_node_name = "Shape_58"} : (tensor<1x?x256xf32>) -> tensor<3xi64>
+    %84 = "onnx.Constant"() {onnx_node_name = "Constant_59", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %85 = "onnx.Gather"(%83, %84) {axis = 0 : si64, onnx_node_name = "Gather_60"} : (tensor<3xi64>, tensor<i64>) -> tensor<i64>
+    %86 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256xf32>} : () -> tensor<256x256xf32>
+    %87 = "onnx.MatMul"(%10, %86) {onnx_node_name = "MatMul_61"} : (tensor<1x?x256xf32>, tensor<256x256xf32>) -> tensor<1x?x256xf32>
+    %88 = "onnx.UnsqueezeV11"(%85) {axes = [0], onnx_node_name = "Unsqueeze_62"} : (tensor<i64>) -> tensor<1xi64>
+    %89 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %90 = "onnx.Constant"() {value = dense<2> : tensor<1xi64>} : () -> tensor<1xi64>
+    %91 = "onnx.Constant"() {value = dense<128> : tensor<1xi64>} : () -> tensor<1xi64>
+    %92 = "onnx.Concat"(%88, %89, %90, %91) {axis = 0 : si64, onnx_node_name = "Concat_63"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %93 = "onnx.Reshape"(%87, %92) {onnx_node_name = "Reshape_64"} : (tensor<1x?x256xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %94 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<2x128xf32>} : () -> tensor<2x128xf32>
+    %95 = "onnx.Add"(%61, %94) {onnx_node_name = "Add_65"} : (tensor<?x?x?x?xf32>, tensor<2x128xf32>) -> tensor<?x?x2x128xf32>
+    %96 = "onnx.Transpose"(%95) {onnx_node_name = "Transpose_66", perm = [0, 2, 1, 3]} : (tensor<?x?x2x128xf32>) -> tensor<?x2x?x128xf32>
+    %97 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<2x128xf32>} : () -> tensor<2x128xf32>
+    %98 = "onnx.Add"(%61, %97) {onnx_node_name = "Add_67"} : (tensor<?x?x?x?xf32>, tensor<2x128xf32>) -> tensor<?x?x2x128xf32>
+    %99 = "onnx.Transpose"(%98) {onnx_node_name = "Transpose_68", perm = [0, 2, 1, 3]} : (tensor<?x?x2x128xf32>) -> tensor<?x2x?x128xf32>
+    %100 = "onnx.Transpose"(%71) {onnx_node_name = "Transpose_69", perm = [0, 2, 3, 1]} : (tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+    %101 = "onnx.MatMul"(%96, %100) {onnx_node_name = "MatMul_70"} : (tensor<?x2x?x128xf32>, tensor<?x?x?x?xf32>) -> tensor<?x2x?x?xf32>
+    %102 = "onnx.Transpose"(%93) {onnx_node_name = "Transpose_71", perm = [0, 2, 3, 1]} : (tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+    %103 = "onnx.MatMul"(%99, %102) {onnx_node_name = "MatMul_72"} : (tensor<?x2x?x128xf32>, tensor<?x?x?x?xf32>) -> tensor<?x2x?x?xf32>
+    %104 = "onnx.Shape"(%103) {onnx_node_name = "Shape_73"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %105 = "onnx.Constant"() {onnx_node_name = "Constant_74", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %106 = "onnx.Gather"(%104, %105) {axis = 0 : si64, onnx_node_name = "Gather_75"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %107 = "onnx.Shape"(%103) {onnx_node_name = "Shape_76"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %108 = "onnx.Constant"() {onnx_node_name = "Constant_77", value = dense<1> : tensor<i64>} : () -> tensor<i64>
+    %109 = "onnx.Gather"(%107, %108) {axis = 0 : si64, onnx_node_name = "Gather_78"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %110 = "onnx.Shape"(%103) {onnx_node_name = "Shape_79"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %111 = "onnx.Constant"() {onnx_node_name = "Constant_80", value = dense<2> : tensor<i64>} : () -> tensor<i64>
+    %112 = "onnx.Gather"(%110, %111) {axis = 0 : si64, onnx_node_name = "Gather_81"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %113 = "onnx.UnsqueezeV11"(%106) {axes = [0], onnx_node_name = "Unsqueeze_82"} : (tensor<i64>) -> tensor<1xi64>
+    %114 = "onnx.UnsqueezeV11"(%109) {axes = [0], onnx_node_name = "Unsqueeze_83"} : (tensor<i64>) -> tensor<1xi64>
+    %115 = "onnx.UnsqueezeV11"(%112) {axes = [0], onnx_node_name = "Unsqueeze_84"} : (tensor<i64>) -> tensor<1xi64>
+    %116 = "onnx.Constant"() {value = dense<1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %117 = "onnx.Concat"(%113, %114, %115, %116) {axis = 0 : si64, onnx_node_name = "Concat_85"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %118 = "onnx.ConstantOfShape"(%117) {onnx_node_name = "ConstantOfShape_86", value = dense<0.000000e+00> : tensor<1xf32>} : (tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %119 = "onnx.Concat"(%118, %103) {axis = 3 : si64, onnx_node_name = "Concat_87"} : (tensor<?x?x?x?xf32>, tensor<?x2x?x?xf32>) -> tensor<?x?x?x?xf32>
+    %120 = "onnx.Shape"(%103) {onnx_node_name = "Shape_88"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %121 = "onnx.Constant"() {onnx_node_name = "Constant_89", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %122 = "onnx.Gather"(%120, %121) {axis = 0 : si64, onnx_node_name = "Gather_90"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %123 = "onnx.Shape"(%103) {onnx_node_name = "Shape_91"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %124 = "onnx.Constant"() {onnx_node_name = "Constant_92", value = dense<1> : tensor<i64>} : () -> tensor<i64>
+    %125 = "onnx.Gather"(%123, %124) {axis = 0 : si64, onnx_node_name = "Gather_93"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %126 = "onnx.Shape"(%103) {onnx_node_name = "Shape_94"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %127 = "onnx.Constant"() {onnx_node_name = "Constant_95", value = dense<3> : tensor<i64>} : () -> tensor<i64>
+    %128 = "onnx.Gather"(%126, %127) {axis = 0 : si64, onnx_node_name = "Gather_96"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %129 = "onnx.Constant"() {onnx_node_name = "Constant_97", value = dense<1> : tensor<i64>} : () -> tensor<i64>
+    %130 = "onnx.Add"(%128, %129) {onnx_node_name = "Add_98"} : (tensor<i64>, tensor<i64>) -> tensor<i64>
+    %131 = "onnx.Shape"(%103) {onnx_node_name = "Shape_99"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %132 = "onnx.Constant"() {onnx_node_name = "Constant_100", value = dense<2> : tensor<i64>} : () -> tensor<i64>
+    %133 = "onnx.Gather"(%131, %132) {axis = 0 : si64, onnx_node_name = "Gather_101"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %134 = "onnx.UnsqueezeV11"(%122) {axes = [0], onnx_node_name = "Unsqueeze_102"} : (tensor<i64>) -> tensor<1xi64>
+    %135 = "onnx.UnsqueezeV11"(%125) {axes = [0], onnx_node_name = "Unsqueeze_103"} : (tensor<i64>) -> tensor<1xi64>
+    %136 = "onnx.UnsqueezeV11"(%130) {axes = [0], onnx_node_name = "Unsqueeze_104"} : (tensor<i64>) -> tensor<1xi64>
+    %137 = "onnx.UnsqueezeV11"(%133) {axes = [0], onnx_node_name = "Unsqueeze_105"} : (tensor<i64>) -> tensor<1xi64>
+    %138 = "onnx.Concat"(%134, %135, %136, %137) {axis = 0 : si64, onnx_node_name = "Concat_106"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %139 = "onnx.Reshape"(%119, %138) {onnx_node_name = "Reshape_107"} : (tensor<?x?x?x?xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %140 = "onnx.Constant"() {onnx_node_name = "Constant_108", value = dense<2> : tensor<1xi64>} : () -> tensor<1xi64>
+    %141 = "onnx.Constant"() {onnx_node_name = "Constant_109", value = dense<1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %142 = "onnx.Constant"() {onnx_node_name = "Constant_110", value = dense<9223372036854775807> : tensor<1xi64>} : () -> tensor<1xi64>
+    %143 = "onnx.Constant"() {onnx_node_name = "Constant_111", value = dense<1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %144 = "onnx.Slice"(%139, %141, %142, %140, %143) {onnx_node_name = "Slice_112"} : (tensor<?x?x?x?xf32>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<?x?x?x?xf32>
+    %145 = "onnx.Shape"(%103) {onnx_node_name = "Shape_113"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %146 = "onnx.Reshape"(%144, %145) {onnx_node_name = "Reshape_114"} : (tensor<?x?x?x?xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %147 = "onnx.Add"(%101, %146) {onnx_node_name = "Add_115"} : (tensor<?x2x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<?x2x?x?xf32>
+    %148 = "onnx.Constant"() {onnx_node_name = "Constant_116", value = dense<11.3137083> : tensor<f32>} : () -> tensor<f32>
+    %149 = "onnx.Div"(%147, %148) {onnx_node_name = "Div_117"} : (tensor<?x2x?x?xf32>, tensor<f32>) -> tensor<?x2x?x?xf32>
+    %150 = "onnx.Shape"(%82) {onnx_node_name = "Shape_118"} : (tensor<?x?x?x?xf32>) -> tensor<4xi64>
+    %151 = "onnx.Constant"() {onnx_node_name = "Constant_119", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %152 = "onnx.Gather"(%150, %151) {axis = 0 : si64, onnx_node_name = "Gather_120"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %153 = "onnx.UnsqueezeV11"(%arg1) {axes = [1], onnx_node_name = "Unsqueeze_121"} : (tensor<1x1x500xi1>) -> tensor<1x1x1x500xi1>
+    %154 = "onnx.Constant"() {onnx_node_name = "Constant_123", value = dense<-3.40282347E+38> : tensor<f32>} : () -> tensor<f32>
+    %155 = "onnx.Where"(%153, %154, %149) {onnx_node_name = "Where_124"} : (tensor<1x1x1x500xi1>, tensor<f32>, tensor<?x2x?x?xf32>) -> tensor<?x2x?x500xf32>
+    %156 = "onnx.Softmax"(%155) {axis = 3 : si64, onnx_node_name = "Softmax_125", onnx_opset = 12 : si64} : (tensor<?x2x?x500xf32>) -> tensor<?x2x?x500xf32>
+    %157 = "onnx.Constant"() {onnx_node_name = "Constant_127", value = dense<0.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %158 = "onnx.Where"(%153, %157, %156) {onnx_node_name = "Where_128"} : (tensor<1x1x1x500xi1>, tensor<f32>, tensor<?x2x?x500xf32>) -> tensor<?x2x?x500xf32>
+    %159 = "onnx.MatMul"(%158, %82) {onnx_node_name = "MatMul_129"} : (tensor<?x2x?x500xf32>, tensor<?x?x?x?xf32>) -> tensor<?x2x?x?xf32>
+    %160 = "onnx.Transpose"(%159) {onnx_node_name = "Transpose_130", perm = [0, 2, 1, 3]} : (tensor<?x2x?x?xf32>) -> tensor<?x?x2x?xf32>
+    %161 = "onnx.UnsqueezeV11"(%152) {axes = [0], onnx_node_name = "Unsqueeze_131"} : (tensor<i64>) -> tensor<1xi64>
+    %162 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %163 = "onnx.Constant"() {value = dense<256> : tensor<1xi64>} : () -> tensor<1xi64>
+    %164 = "onnx.Concat"(%161, %162, %163) {axis = 0 : si64, onnx_node_name = "Concat_132"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<3xi64>
+    %165 = "onnx.Reshape"(%160, %164) {onnx_node_name = "Reshape_133"} : (tensor<?x?x2x?xf32>, tensor<3xi64>) -> tensor<?x?x?xf32>
+    %166 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256xf32>} : () -> tensor<256x256xf32>
+    %167 = "onnx.MatMul"(%165, %166) {onnx_node_name = "MatMul_134"} : (tensor<?x?x?xf32>, tensor<256x256xf32>) -> tensor<?x?x256xf32>
+    %168 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %169 = "onnx.Add"(%167, %168) {onnx_node_name = "Add_135"} : (tensor<?x?x256xf32>, tensor<256xf32>) -> tensor<?x?x256xf32>
+    %170 = "onnx.Constant"() {onnx_node_name = "Constant_136", value = dense<1.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %171 = "onnx.Mul"(%169, %170) {onnx_node_name = "Mul_137"} : (tensor<?x?x256xf32>, tensor<f32>) -> tensor<?x?x256xf32>
+    %172 = "onnx.Add"(%35, %171) {onnx_node_name = "Add_138"} : (tensor<1x500x256xf32>, tensor<?x?x256xf32>) -> tensor<?x500x256xf32>
+    %173 = "onnx.ReduceMean"(%172) {axes = [-1], onnx_node_name = "ReduceMean_139"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %174 = "onnx.Sub"(%172, %173) {onnx_node_name = "Sub_140"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %175 = "onnx.Constant"() {onnx_node_name = "Constant_141", value = dense<2.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %176 = "onnx.Pow"(%174, %175) {onnx_node_name = "Pow_142"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %177 = "onnx.ReduceMean"(%176) {axes = [-1], onnx_node_name = "ReduceMean_143"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %178 = "onnx.Constant"() {onnx_node_name = "Constant_144", value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+    %179 = "onnx.Add"(%177, %178) {onnx_node_name = "Add_145"} : (tensor<?x500x1xf32>, tensor<f32>) -> tensor<?x500x1xf32>
+    %180 = "onnx.Sqrt"(%179) {onnx_node_name = "Sqrt_146"} : (tensor<?x500x1xf32>) -> tensor<?x500x1xf32>
+    %181 = "onnx.Div"(%174, %180) {onnx_node_name = "Div_147"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %182 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %183 = "onnx.Mul"(%181, %182) {onnx_node_name = "Mul_148"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %184 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %185 = "onnx.Add"(%183, %184) {onnx_node_name = "Add_149"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %186 = "onnx.Transpose"(%185) {onnx_node_name = "Transpose_150", perm = [0, 2, 1]} : (tensor<?x500x256xf32>) -> tensor<?x256x500xf32>
+    %187 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512x256x1xf32>} : () -> tensor<512x256x1xf32>
+    %188 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512xf32>} : () -> tensor<512xf32>
+    %189 = "onnx.Conv"(%186, %187, %188) {dilations = [1], group = 1 : si64, kernel_shape = [1], onnx_node_name = "Conv_151", pads = [0, 0], strides = [1]} : (tensor<?x256x500xf32>, tensor<512x256x1xf32>, tensor<512xf32>) -> tensor<?x512x500xf32>
+    %190:2 = "onnx.SplitV11"(%189) {axis = 1 : si64, onnx_node_name = "Split_152"} : (tensor<?x512x500xf32>) -> (tensor<?x256x500xf32>, tensor<?x256x500xf32>)
+    %191 = "onnx.Sigmoid"(%190#1) {onnx_node_name = "Sigmoid_153"} : (tensor<?x256x500xf32>) -> tensor<?x256x500xf32>
+    %192 = "onnx.Mul"(%190#0, %191) {onnx_node_name = "Mul_154"} : (tensor<?x256x500xf32>, tensor<?x256x500xf32>) -> tensor<?x256x500xf32>
+    %193 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x1x31xf32>} : () -> tensor<256x1x31xf32>
+    %194 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %195 = "onnx.Conv"(%192, %193, %194) {dilations = [1], group = 256 : si64, kernel_shape = [31], onnx_node_name = "Conv_155", pads = [15, 15], strides = [1]} : (tensor<?x256x500xf32>, tensor<256x1x31xf32>, tensor<256xf32>) -> tensor<?x256x500xf32>
+    %196 = "onnx.Sigmoid"(%195) {onnx_node_name = "Sigmoid_156"} : (tensor<?x256x500xf32>) -> tensor<?x256x500xf32>
+    %197 = "onnx.Mul"(%195, %196) {onnx_node_name = "Mul_157"} : (tensor<?x256x500xf32>, tensor<?x256x500xf32>) -> tensor<?x256x500xf32>
+    %198 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256x1xf32>} : () -> tensor<256x256x1xf32>
+    %199 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %200 = "onnx.Conv"(%197, %198, %199) {dilations = [1], group = 1 : si64, kernel_shape = [1], onnx_node_name = "Conv_158", pads = [0, 0], strides = [1]} : (tensor<?x256x500xf32>, tensor<256x256x1xf32>, tensor<256xf32>) -> tensor<?x256x500xf32>
+    %201 = "onnx.Transpose"(%200) {onnx_node_name = "Transpose_159", perm = [0, 2, 1]} : (tensor<?x256x500xf32>) -> tensor<?x500x256xf32>
+    %202 = "onnx.Constant"() {onnx_node_name = "Constant_160", value = dense<1.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %203 = "onnx.Mul"(%201, %202) {onnx_node_name = "Mul_161"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %204 = "onnx.Add"(%172, %203) {onnx_node_name = "Add_162"} : (tensor<?x500x256xf32>, tensor<?x500x256xf32>) -> tensor<?x500x256xf32>
+    %205 = "onnx.ReduceMean"(%204) {axes = [-1], onnx_node_name = "ReduceMean_163"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %206 = "onnx.Sub"(%204, %205) {onnx_node_name = "Sub_164"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %207 = "onnx.Constant"() {onnx_node_name = "Constant_165", value = dense<2.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %208 = "onnx.Pow"(%206, %207) {onnx_node_name = "Pow_166"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %209 = "onnx.ReduceMean"(%208) {axes = [-1], onnx_node_name = "ReduceMean_167"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %210 = "onnx.Constant"() {onnx_node_name = "Constant_168", value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+    %211 = "onnx.Add"(%209, %210) {onnx_node_name = "Add_169"} : (tensor<?x500x1xf32>, tensor<f32>) -> tensor<?x500x1xf32>
+    %212 = "onnx.Sqrt"(%211) {onnx_node_name = "Sqrt_170"} : (tensor<?x500x1xf32>) -> tensor<?x500x1xf32>
+    %213 = "onnx.Div"(%206, %212) {onnx_node_name = "Div_171"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %214 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %215 = "onnx.Mul"(%213, %214) {onnx_node_name = "Mul_172"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %216 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %217 = "onnx.Add"(%215, %216) {onnx_node_name = "Add_173"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %218 = "onnx.Transpose"(%217) {onnx_node_name = "Transpose_174", perm = [0, 2, 1]} : (tensor<?x500x256xf32>) -> tensor<?x256x500xf32>
+    %219 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512x256x3xf32>} : () -> tensor<512x256x3xf32>
+    %220 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512xf32>} : () -> tensor<512xf32>
+    %221 = "onnx.Conv"(%218, %219, %220) {dilations = [1], group = 1 : si64, kernel_shape = [3], onnx_node_name = "Conv_175", pads = [1, 1], strides = [1]} : (tensor<?x256x500xf32>, tensor<512x256x3xf32>, tensor<512xf32>) -> tensor<?x512x500xf32>
+    %222 = "onnx.Relu"(%221) {onnx_node_name = "Relu_176"} : (tensor<?x512x500xf32>) -> tensor<?x512x500xf32>
+    %223 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x512x3xf32>} : () -> tensor<256x512x3xf32>
+    %224 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %225 = "onnx.Conv"(%222, %223, %224) {dilations = [1], group = 1 : si64, kernel_shape = [3], onnx_node_name = "Conv_177", pads = [1, 1], strides = [1]} : (tensor<?x512x500xf32>, tensor<256x512x3xf32>, tensor<256xf32>) -> tensor<?x256x500xf32>
+    %226 = "onnx.Transpose"(%225) {onnx_node_name = "Transpose_178", perm = [0, 2, 1]} : (tensor<?x256x500xf32>) -> tensor<?x500x256xf32>
+    %227 = "onnx.Constant"() {onnx_node_name = "Constant_179", value = dense<5.000000e-01> : tensor<f32>} : () -> tensor<f32>
+    %228 = "onnx.Mul"(%226, %227) {onnx_node_name = "Mul_180"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %229 = "onnx.Add"(%204, %228) {onnx_node_name = "Add_181"} : (tensor<?x500x256xf32>, tensor<?x500x256xf32>) -> tensor<?x500x256xf32>
+    %230 = "onnx.ReduceMean"(%229) {axes = [-1], onnx_node_name = "ReduceMean_182"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %231 = "onnx.Sub"(%229, %230) {onnx_node_name = "Sub_183"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %232 = "onnx.Constant"() {onnx_node_name = "Constant_184", value = dense<2.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %233 = "onnx.Pow"(%231, %232) {onnx_node_name = "Pow_185"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %234 = "onnx.ReduceMean"(%233) {axes = [-1], onnx_node_name = "ReduceMean_186"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %235 = "onnx.Constant"() {onnx_node_name = "Constant_187", value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+    %236 = "onnx.Add"(%234, %235) {onnx_node_name = "Add_188"} : (tensor<?x500x1xf32>, tensor<f32>) -> tensor<?x500x1xf32>
+    %237 = "onnx.Sqrt"(%236) {onnx_node_name = "Sqrt_189"} : (tensor<?x500x1xf32>) -> tensor<?x500x1xf32>
+    %238 = "onnx.Div"(%231, %237) {onnx_node_name = "Div_190"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %239 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %240 = "onnx.Mul"(%238, %239) {onnx_node_name = "Mul_191"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %241 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %242 = "onnx.Add"(%240, %241) {onnx_node_name = "Add_192"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %243 = "onnx.ReduceMean"(%242) {axes = [-1], onnx_node_name = "ReduceMean_193"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %244 = "onnx.Sub"(%242, %243) {onnx_node_name = "Sub_194"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %245 = "onnx.Constant"() {onnx_node_name = "Constant_195", value = dense<2.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %246 = "onnx.Pow"(%244, %245) {onnx_node_name = "Pow_196"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %247 = "onnx.ReduceMean"(%246) {axes = [-1], onnx_node_name = "ReduceMean_197"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %248 = "onnx.Constant"() {onnx_node_name = "Constant_198", value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+    %249 = "onnx.Add"(%247, %248) {onnx_node_name = "Add_199"} : (tensor<?x500x1xf32>, tensor<f32>) -> tensor<?x500x1xf32>
+    %250 = "onnx.Sqrt"(%249) {onnx_node_name = "Sqrt_200"} : (tensor<?x500x1xf32>) -> tensor<?x500x1xf32>
+    %251 = "onnx.Div"(%244, %250) {onnx_node_name = "Div_201"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %252 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %253 = "onnx.Mul"(%251, %252) {onnx_node_name = "Mul_202"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %254 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %255 = "onnx.Add"(%253, %254) {onnx_node_name = "Add_203"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %256 = "onnx.Transpose"(%255) {onnx_node_name = "Transpose_204", perm = [0, 2, 1]} : (tensor<?x500x256xf32>) -> tensor<?x256x500xf32>
+    %257 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512x256x3xf32>} : () -> tensor<512x256x3xf32>
+    %258 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512xf32>} : () -> tensor<512xf32>
+    %259 = "onnx.Conv"(%256, %257, %258) {dilations = [1], group = 1 : si64, kernel_shape = [3], onnx_node_name = "Conv_205", pads = [1, 1], strides = [1]} : (tensor<?x256x500xf32>, tensor<512x256x3xf32>, tensor<512xf32>) -> tensor<?x512x500xf32>
+    %260 = "onnx.Relu"(%259) {onnx_node_name = "Relu_206"} : (tensor<?x512x500xf32>) -> tensor<?x512x500xf32>
+    %261 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x512x3xf32>} : () -> tensor<256x512x3xf32>
+    %262 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %263 = "onnx.Conv"(%260, %261, %262) {dilations = [1], group = 1 : si64, kernel_shape = [3], onnx_node_name = "Conv_207", pads = [1, 1], strides = [1]} : (tensor<?x512x500xf32>, tensor<256x512x3xf32>, tensor<256xf32>) -> tensor<?x256x500xf32>
+    %264 = "onnx.Transpose"(%263) {onnx_node_name = "Transpose_208", perm = [0, 2, 1]} : (tensor<?x256x500xf32>) -> tensor<?x500x256xf32>
+    %265 = "onnx.Constant"() {onnx_node_name = "Constant_209", value = dense<5.000000e-01> : tensor<f32>} : () -> tensor<f32>
+    %266 = "onnx.Mul"(%264, %265) {onnx_node_name = "Mul_210"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %267 = "onnx.Add"(%240, %266) : (tensor<?x500x256xf32>, tensor<?x500x256xf32>) -> tensor<?x500x256xf32>
+    %268 = "onnx.Add"(%267, %241) : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %269 = "onnx.ReduceMean"(%268) {axes = [-1], onnx_node_name = "ReduceMean_212"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %270 = "onnx.Sub"(%268, %269) {onnx_node_name = "Sub_213"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %271 = "onnx.Constant"() {onnx_node_name = "Constant_214", value = dense<2.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %272 = "onnx.Pow"(%270, %271) {onnx_node_name = "Pow_215"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %273 = "onnx.ReduceMean"(%272) {axes = [-1], onnx_node_name = "ReduceMean_216"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %274 = "onnx.Constant"() {onnx_node_name = "Constant_217", value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+    %275 = "onnx.Add"(%273, %274) {onnx_node_name = "Add_218"} : (tensor<?x500x1xf32>, tensor<f32>) -> tensor<?x500x1xf32>
+    %276 = "onnx.Sqrt"(%275) {onnx_node_name = "Sqrt_219"} : (tensor<?x500x1xf32>) -> tensor<?x500x1xf32>
+    %277 = "onnx.Div"(%270, %276) {onnx_node_name = "Div_220"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %278 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %279 = "onnx.Mul"(%277, %278) {onnx_node_name = "Mul_221"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %280 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %281 = "onnx.Add"(%279, %280) {onnx_node_name = "Add_222"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %282 = "onnx.Shape"(%281) {onnx_node_name = "Shape_223"} : (tensor<?x500x256xf32>) -> tensor<3xi64>
+    %283 = "onnx.Constant"() {onnx_node_name = "Constant_224", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %284 = "onnx.Gather"(%282, %283) {axis = 0 : si64, onnx_node_name = "Gather_225"} : (tensor<3xi64>, tensor<i64>) -> tensor<i64>
+    %285 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256xf32>} : () -> tensor<256x256xf32>
+    %286 = "onnx.MatMul"(%281, %285) {onnx_node_name = "MatMul_226"} : (tensor<?x500x256xf32>, tensor<256x256xf32>) -> tensor<?x500x256xf32>
+    %287 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %288 = "onnx.Add"(%286, %287) {onnx_node_name = "Add_227"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %289 = "onnx.UnsqueezeV11"(%284) {axes = [0], onnx_node_name = "Unsqueeze_228"} : (tensor<i64>) -> tensor<1xi64>
+    %290 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %291 = "onnx.Constant"() {value = dense<2> : tensor<1xi64>} : () -> tensor<1xi64>
+    %292 = "onnx.Constant"() {value = dense<128> : tensor<1xi64>} : () -> tensor<1xi64>
+    %293 = "onnx.Concat"(%289, %290, %291, %292) {axis = 0 : si64, onnx_node_name = "Concat_229"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %294 = "onnx.Reshape"(%288, %293) {onnx_node_name = "Reshape_230"} : (tensor<?x500x256xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %295 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256xf32>} : () -> tensor<256x256xf32>
+    %296 = "onnx.MatMul"(%281, %295) {onnx_node_name = "MatMul_231"} : (tensor<?x500x256xf32>, tensor<256x256xf32>) -> tensor<?x500x256xf32>
+    %297 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %298 = "onnx.Add"(%296, %297) {onnx_node_name = "Add_232"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %299 = "onnx.UnsqueezeV11"(%284) {axes = [0], onnx_node_name = "Unsqueeze_233"} : (tensor<i64>) -> tensor<1xi64>
+    %300 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %301 = "onnx.Constant"() {value = dense<2> : tensor<1xi64>} : () -> tensor<1xi64>
+    %302 = "onnx.Constant"() {value = dense<128> : tensor<1xi64>} : () -> tensor<1xi64>
+    %303 = "onnx.Concat"(%299, %300, %301, %302) {axis = 0 : si64, onnx_node_name = "Concat_234"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %304 = "onnx.Reshape"(%298, %303) {onnx_node_name = "Reshape_235"} : (tensor<?x500x256xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %305 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256xf32>} : () -> tensor<256x256xf32>
+    %306 = "onnx.MatMul"(%281, %305) {onnx_node_name = "MatMul_236"} : (tensor<?x500x256xf32>, tensor<256x256xf32>) -> tensor<?x500x256xf32>
+    %307 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %308 = "onnx.Add"(%306, %307) {onnx_node_name = "Add_237"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %309 = "onnx.UnsqueezeV11"(%284) {axes = [0], onnx_node_name = "Unsqueeze_238"} : (tensor<i64>) -> tensor<1xi64>
+    %310 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %311 = "onnx.Constant"() {value = dense<2> : tensor<1xi64>} : () -> tensor<1xi64>
+    %312 = "onnx.Constant"() {value = dense<128> : tensor<1xi64>} : () -> tensor<1xi64>
+    %313 = "onnx.Concat"(%309, %310, %311, %312) {axis = 0 : si64, onnx_node_name = "Concat_239"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %314 = "onnx.Reshape"(%308, %313) {onnx_node_name = "Reshape_240"} : (tensor<?x500x256xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %315 = "onnx.Transpose"(%314) {onnx_node_name = "Transpose_241", perm = [0, 2, 1, 3]} : (tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+    %316 = "onnx.Shape"(%10) {onnx_node_name = "Shape_242"} : (tensor<1x?x256xf32>) -> tensor<3xi64>
+    %317 = "onnx.Constant"() {onnx_node_name = "Constant_243", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %318 = "onnx.Gather"(%316, %317) {axis = 0 : si64, onnx_node_name = "Gather_244"} : (tensor<3xi64>, tensor<i64>) -> tensor<i64>
+    %319 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256xf32>} : () -> tensor<256x256xf32>
+    %320 = "onnx.MatMul"(%10, %319) {onnx_node_name = "MatMul_245"} : (tensor<1x?x256xf32>, tensor<256x256xf32>) -> tensor<1x?x256xf32>
+    %321 = "onnx.UnsqueezeV11"(%318) {axes = [0], onnx_node_name = "Unsqueeze_246"} : (tensor<i64>) -> tensor<1xi64>
+    %322 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %323 = "onnx.Constant"() {value = dense<2> : tensor<1xi64>} : () -> tensor<1xi64>
+    %324 = "onnx.Constant"() {value = dense<128> : tensor<1xi64>} : () -> tensor<1xi64>
+    %325 = "onnx.Concat"(%321, %322, %323, %324) {axis = 0 : si64, onnx_node_name = "Concat_247"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %326 = "onnx.Reshape"(%320, %325) {onnx_node_name = "Reshape_248"} : (tensor<1x?x256xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %327 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<2x128xf32>} : () -> tensor<2x128xf32>
+    %328 = "onnx.Add"(%294, %327) {onnx_node_name = "Add_249"} : (tensor<?x?x?x?xf32>, tensor<2x128xf32>) -> tensor<?x?x2x128xf32>
+    %329 = "onnx.Transpose"(%328) {onnx_node_name = "Transpose_250", perm = [0, 2, 1, 3]} : (tensor<?x?x2x128xf32>) -> tensor<?x2x?x128xf32>
+    %330 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<2x128xf32>} : () -> tensor<2x128xf32>
+    %331 = "onnx.Add"(%294, %330) {onnx_node_name = "Add_251"} : (tensor<?x?x?x?xf32>, tensor<2x128xf32>) -> tensor<?x?x2x128xf32>
+    %332 = "onnx.Transpose"(%331) {onnx_node_name = "Transpose_252", perm = [0, 2, 1, 3]} : (tensor<?x?x2x128xf32>) -> tensor<?x2x?x128xf32>
+    %333 = "onnx.Transpose"(%304) {onnx_node_name = "Transpose_253", perm = [0, 2, 3, 1]} : (tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+    %334 = "onnx.MatMul"(%329, %333) {onnx_node_name = "MatMul_254"} : (tensor<?x2x?x128xf32>, tensor<?x?x?x?xf32>) -> tensor<?x2x?x?xf32>
+    %335 = "onnx.Transpose"(%326) {onnx_node_name = "Transpose_255", perm = [0, 2, 3, 1]} : (tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+    %336 = "onnx.MatMul"(%332, %335) {onnx_node_name = "MatMul_256"} : (tensor<?x2x?x128xf32>, tensor<?x?x?x?xf32>) -> tensor<?x2x?x?xf32>
+    %337 = "onnx.Shape"(%336) {onnx_node_name = "Shape_257"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %338 = "onnx.Constant"() {onnx_node_name = "Constant_258", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %339 = "onnx.Gather"(%337, %338) {axis = 0 : si64, onnx_node_name = "Gather_259"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %340 = "onnx.Shape"(%336) {onnx_node_name = "Shape_260"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %341 = "onnx.Constant"() {onnx_node_name = "Constant_261", value = dense<1> : tensor<i64>} : () -> tensor<i64>
+    %342 = "onnx.Gather"(%340, %341) {axis = 0 : si64, onnx_node_name = "Gather_262"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %343 = "onnx.Shape"(%336) {onnx_node_name = "Shape_263"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %344 = "onnx.Constant"() {onnx_node_name = "Constant_264", value = dense<2> : tensor<i64>} : () -> tensor<i64>
+    %345 = "onnx.Gather"(%343, %344) {axis = 0 : si64, onnx_node_name = "Gather_265"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %346 = "onnx.UnsqueezeV11"(%339) {axes = [0], onnx_node_name = "Unsqueeze_266"} : (tensor<i64>) -> tensor<1xi64>
+    %347 = "onnx.UnsqueezeV11"(%342) {axes = [0], onnx_node_name = "Unsqueeze_267"} : (tensor<i64>) -> tensor<1xi64>
+    %348 = "onnx.UnsqueezeV11"(%345) {axes = [0], onnx_node_name = "Unsqueeze_268"} : (tensor<i64>) -> tensor<1xi64>
+    %349 = "onnx.Constant"() {value = dense<1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %350 = "onnx.Concat"(%346, %347, %348, %349) {axis = 0 : si64, onnx_node_name = "Concat_269"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %351 = "onnx.ConstantOfShape"(%350) {onnx_node_name = "ConstantOfShape_270", value = dense<0.000000e+00> : tensor<1xf32>} : (tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %352 = "onnx.Concat"(%351, %336) {axis = 3 : si64, onnx_node_name = "Concat_271"} : (tensor<?x?x?x?xf32>, tensor<?x2x?x?xf32>) -> tensor<?x?x?x?xf32>
+    %353 = "onnx.Shape"(%336) {onnx_node_name = "Shape_272"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %354 = "onnx.Constant"() {onnx_node_name = "Constant_273", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %355 = "onnx.Gather"(%353, %354) {axis = 0 : si64, onnx_node_name = "Gather_274"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %356 = "onnx.Shape"(%336) {onnx_node_name = "Shape_275"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %357 = "onnx.Constant"() {onnx_node_name = "Constant_276", value = dense<1> : tensor<i64>} : () -> tensor<i64>
+    %358 = "onnx.Gather"(%356, %357) {axis = 0 : si64, onnx_node_name = "Gather_277"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %359 = "onnx.Shape"(%336) {onnx_node_name = "Shape_278"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %360 = "onnx.Constant"() {onnx_node_name = "Constant_279", value = dense<3> : tensor<i64>} : () -> tensor<i64>
+    %361 = "onnx.Gather"(%359, %360) {axis = 0 : si64, onnx_node_name = "Gather_280"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %362 = "onnx.Constant"() {onnx_node_name = "Constant_281", value = dense<1> : tensor<i64>} : () -> tensor<i64>
+    %363 = "onnx.Add"(%361, %362) {onnx_node_name = "Add_282"} : (tensor<i64>, tensor<i64>) -> tensor<i64>
+    %364 = "onnx.Shape"(%336) {onnx_node_name = "Shape_283"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %365 = "onnx.Constant"() {onnx_node_name = "Constant_284", value = dense<2> : tensor<i64>} : () -> tensor<i64>
+    %366 = "onnx.Gather"(%364, %365) {axis = 0 : si64, onnx_node_name = "Gather_285"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %367 = "onnx.UnsqueezeV11"(%355) {axes = [0], onnx_node_name = "Unsqueeze_286"} : (tensor<i64>) -> tensor<1xi64>
+    %368 = "onnx.UnsqueezeV11"(%358) {axes = [0], onnx_node_name = "Unsqueeze_287"} : (tensor<i64>) -> tensor<1xi64>
+    %369 = "onnx.UnsqueezeV11"(%363) {axes = [0], onnx_node_name = "Unsqueeze_288"} : (tensor<i64>) -> tensor<1xi64>
+    %370 = "onnx.UnsqueezeV11"(%366) {axes = [0], onnx_node_name = "Unsqueeze_289"} : (tensor<i64>) -> tensor<1xi64>
+    %371 = "onnx.Concat"(%367, %368, %369, %370) {axis = 0 : si64, onnx_node_name = "Concat_290"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<4xi64>
+    %372 = "onnx.Reshape"(%352, %371) {onnx_node_name = "Reshape_291"} : (tensor<?x?x?x?xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %373 = "onnx.Constant"() {onnx_node_name = "Constant_292", value = dense<2> : tensor<1xi64>} : () -> tensor<1xi64>
+    %374 = "onnx.Constant"() {onnx_node_name = "Constant_293", value = dense<1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %375 = "onnx.Constant"() {onnx_node_name = "Constant_294", value = dense<9223372036854775807> : tensor<1xi64>} : () -> tensor<1xi64>
+    %376 = "onnx.Constant"() {onnx_node_name = "Constant_295", value = dense<1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %377 = "onnx.Slice"(%372, %374, %375, %373, %376) {onnx_node_name = "Slice_296"} : (tensor<?x?x?x?xf32>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<?x?x?x?xf32>
+    %378 = "onnx.Shape"(%336) {onnx_node_name = "Shape_297"} : (tensor<?x2x?x?xf32>) -> tensor<4xi64>
+    %379 = "onnx.Reshape"(%377, %378) {onnx_node_name = "Reshape_298"} : (tensor<?x?x?x?xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
+    %380 = "onnx.Add"(%334, %379) {onnx_node_name = "Add_299"} : (tensor<?x2x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<?x2x?x?xf32>
+    %381 = "onnx.Constant"() {onnx_node_name = "Constant_300", value = dense<11.3137083> : tensor<f32>} : () -> tensor<f32>
+    %382 = "onnx.Div"(%380, %381) {onnx_node_name = "Div_301"} : (tensor<?x2x?x?xf32>, tensor<f32>) -> tensor<?x2x?x?xf32>
+    %383 = "onnx.Shape"(%315) {onnx_node_name = "Shape_302"} : (tensor<?x?x?x?xf32>) -> tensor<4xi64>
+    %384 = "onnx.Constant"() {onnx_node_name = "Constant_303", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %385 = "onnx.Gather"(%383, %384) {axis = 0 : si64, onnx_node_name = "Gather_304"} : (tensor<4xi64>, tensor<i64>) -> tensor<i64>
+    %386 = "onnx.UnsqueezeV11"(%arg1) {axes = [1], onnx_node_name = "Unsqueeze_305"} : (tensor<1x1x500xi1>) -> tensor<1x1x1x500xi1>
+    %387 = "onnx.Constant"() {onnx_node_name = "Constant_307", value = dense<-3.40282347E+38> : tensor<f32>} : () -> tensor<f32>
+    %388 = "onnx.Where"(%386, %387, %382) {onnx_node_name = "Where_308"} : (tensor<1x1x1x500xi1>, tensor<f32>, tensor<?x2x?x?xf32>) -> tensor<?x2x?x500xf32>
+    %389 = "onnx.Softmax"(%388) {axis = 3 : si64, onnx_node_name = "Softmax_309", onnx_opset = 12 : si64} : (tensor<?x2x?x500xf32>) -> tensor<?x2x?x500xf32>
+    %390 = "onnx.Constant"() {onnx_node_name = "Constant_311", value = dense<0.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %391 = "onnx.Where"(%386, %390, %389) {onnx_node_name = "Where_312"} : (tensor<1x1x1x500xi1>, tensor<f32>, tensor<?x2x?x500xf32>) -> tensor<?x2x?x500xf32>
+    %392 = "onnx.MatMul"(%391, %315) {onnx_node_name = "MatMul_313"} : (tensor<?x2x?x500xf32>, tensor<?x?x?x?xf32>) -> tensor<?x2x?x?xf32>
+    %393 = "onnx.Transpose"(%392) {onnx_node_name = "Transpose_314", perm = [0, 2, 1, 3]} : (tensor<?x2x?x?xf32>) -> tensor<?x?x2x?xf32>
+    %394 = "onnx.UnsqueezeV11"(%385) {axes = [0], onnx_node_name = "Unsqueeze_315"} : (tensor<i64>) -> tensor<1xi64>
+    %395 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %396 = "onnx.Constant"() {value = dense<256> : tensor<1xi64>} : () -> tensor<1xi64>
+    %397 = "onnx.Concat"(%394, %395, %396) {axis = 0 : si64, onnx_node_name = "Concat_316"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<3xi64>
+    %398 = "onnx.Reshape"(%393, %397) {onnx_node_name = "Reshape_317"} : (tensor<?x?x2x?xf32>, tensor<3xi64>) -> tensor<?x?x?xf32>
+    %399 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256xf32>} : () -> tensor<256x256xf32>
+    %400 = "onnx.MatMul"(%398, %399) {onnx_node_name = "MatMul_318"} : (tensor<?x?x?xf32>, tensor<256x256xf32>) -> tensor<?x?x256xf32>
+    %401 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %402 = "onnx.Add"(%400, %401) {onnx_node_name = "Add_319"} : (tensor<?x?x256xf32>, tensor<256xf32>) -> tensor<?x?x256xf32>
+    %403 = "onnx.Constant"() {onnx_node_name = "Constant_320", value = dense<1.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %404 = "onnx.Mul"(%402, %403) {onnx_node_name = "Mul_321"} : (tensor<?x?x256xf32>, tensor<f32>) -> tensor<?x?x256xf32>
+    %405 = "onnx.Add"(%267, %404) : (tensor<?x500x256xf32>, tensor<?x?x256xf32>) -> tensor<?x500x256xf32>
+    %406 = "onnx.Add"(%405, %241) : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %407 = "onnx.ReduceMean"(%406) {axes = [-1], onnx_node_name = "ReduceMean_323"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %408 = "onnx.Sub"(%406, %407) {onnx_node_name = "Sub_324"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %409 = "onnx.Constant"() {onnx_node_name = "Constant_325", value = dense<2.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %410 = "onnx.Pow"(%408, %409) {onnx_node_name = "Pow_326"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %411 = "onnx.ReduceMean"(%410) {axes = [-1], onnx_node_name = "ReduceMean_327"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %412 = "onnx.Constant"() {onnx_node_name = "Constant_328", value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+    %413 = "onnx.Add"(%411, %412) {onnx_node_name = "Add_329"} : (tensor<?x500x1xf32>, tensor<f32>) -> tensor<?x500x1xf32>
+    %414 = "onnx.Sqrt"(%413) {onnx_node_name = "Sqrt_330"} : (tensor<?x500x1xf32>) -> tensor<?x500x1xf32>
+    %415 = "onnx.Div"(%408, %414) {onnx_node_name = "Div_331"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %416 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %417 = "onnx.Mul"(%415, %416) {onnx_node_name = "Mul_332"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %418 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %419 = "onnx.Add"(%417, %418) {onnx_node_name = "Add_333"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %420 = "onnx.Transpose"(%419) {onnx_node_name = "Transpose_334", perm = [0, 2, 1]} : (tensor<?x500x256xf32>) -> tensor<?x256x500xf32>
+    %421 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512x256x1xf32>} : () -> tensor<512x256x1xf32>
+    %422 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512xf32>} : () -> tensor<512xf32>
+    %423 = "onnx.Conv"(%420, %421, %422) {dilations = [1], group = 1 : si64, kernel_shape = [1], onnx_node_name = "Conv_335", pads = [0, 0], strides = [1]} : (tensor<?x256x500xf32>, tensor<512x256x1xf32>, tensor<512xf32>) -> tensor<?x512x500xf32>
+    %424:2 = "onnx.SplitV11"(%423) {axis = 1 : si64, onnx_node_name = "Split_336"} : (tensor<?x512x500xf32>) -> (tensor<?x256x500xf32>, tensor<?x256x500xf32>)
+    %425 = "onnx.Sigmoid"(%424#1) {onnx_node_name = "Sigmoid_337"} : (tensor<?x256x500xf32>) -> tensor<?x256x500xf32>
+    %426 = "onnx.Mul"(%424#0, %425) {onnx_node_name = "Mul_338"} : (tensor<?x256x500xf32>, tensor<?x256x500xf32>) -> tensor<?x256x500xf32>
+    %427 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x1x31xf32>} : () -> tensor<256x1x31xf32>
+    %428 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %429 = "onnx.Conv"(%426, %427, %428) {dilations = [1], group = 256 : si64, kernel_shape = [31], onnx_node_name = "Conv_339", pads = [15, 15], strides = [1]} : (tensor<?x256x500xf32>, tensor<256x1x31xf32>, tensor<256xf32>) -> tensor<?x256x500xf32>
+    %430 = "onnx.Sigmoid"(%429) {onnx_node_name = "Sigmoid_340"} : (tensor<?x256x500xf32>) -> tensor<?x256x500xf32>
+    %431 = "onnx.Mul"(%429, %430) {onnx_node_name = "Mul_341"} : (tensor<?x256x500xf32>, tensor<?x256x500xf32>) -> tensor<?x256x500xf32>
+    %432 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256x1xf32>} : () -> tensor<256x256x1xf32>
+    %433 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %434 = "onnx.Conv"(%431, %432, %433) {dilations = [1], group = 1 : si64, kernel_shape = [1], onnx_node_name = "Conv_342", pads = [0, 0], strides = [1]} : (tensor<?x256x500xf32>, tensor<256x256x1xf32>, tensor<256xf32>) -> tensor<?x256x500xf32>
+    %435 = "onnx.Transpose"(%434) {onnx_node_name = "Transpose_343", perm = [0, 2, 1]} : (tensor<?x256x500xf32>) -> tensor<?x500x256xf32>
+    %436 = "onnx.Constant"() {onnx_node_name = "Constant_344", value = dense<1.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %437 = "onnx.Mul"(%435, %436) {onnx_node_name = "Mul_345"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %438 = "onnx.Add"(%405, %437) : (tensor<?x500x256xf32>, tensor<?x500x256xf32>) -> tensor<?x500x256xf32>
+    %439 = "onnx.Add"(%438, %241) : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %440 = "onnx.ReduceMean"(%439) {axes = [-1], onnx_node_name = "ReduceMean_347"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %441 = "onnx.Sub"(%439, %440) {onnx_node_name = "Sub_348"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %442 = "onnx.Constant"() {onnx_node_name = "Constant_349", value = dense<2.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %443 = "onnx.Pow"(%441, %442) {onnx_node_name = "Pow_350"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %444 = "onnx.ReduceMean"(%443) {axes = [-1], onnx_node_name = "ReduceMean_351"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %445 = "onnx.Constant"() {onnx_node_name = "Constant_352", value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+    %446 = "onnx.Add"(%444, %445) {onnx_node_name = "Add_353"} : (tensor<?x500x1xf32>, tensor<f32>) -> tensor<?x500x1xf32>
+    %447 = "onnx.Sqrt"(%446) {onnx_node_name = "Sqrt_354"} : (tensor<?x500x1xf32>) -> tensor<?x500x1xf32>
+    %448 = "onnx.Div"(%441, %447) {onnx_node_name = "Div_355"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %449 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %450 = "onnx.Mul"(%448, %449) {onnx_node_name = "Mul_356"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %451 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %452 = "onnx.Add"(%450, %451) {onnx_node_name = "Add_357"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %453 = "onnx.Transpose"(%452) {onnx_node_name = "Transpose_358", perm = [0, 2, 1]} : (tensor<?x500x256xf32>) -> tensor<?x256x500xf32>
+    %454 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512x256x3xf32>} : () -> tensor<512x256x3xf32>
+    %455 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<512xf32>} : () -> tensor<512xf32>
+    %456 = "onnx.Conv"(%453, %454, %455) {dilations = [1], group = 1 : si64, kernel_shape = [3], onnx_node_name = "Conv_359", pads = [1, 1], strides = [1]} : (tensor<?x256x500xf32>, tensor<512x256x3xf32>, tensor<512xf32>) -> tensor<?x512x500xf32>
+    %457 = "onnx.Relu"(%456) {onnx_node_name = "Relu_360"} : (tensor<?x512x500xf32>) -> tensor<?x512x500xf32>
+    %458 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x512x3xf32>} : () -> tensor<256x512x3xf32>
+    %459 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %460 = "onnx.Conv"(%457, %458, %459) {dilations = [1], group = 1 : si64, kernel_shape = [3], onnx_node_name = "Conv_361", pads = [1, 1], strides = [1]} : (tensor<?x512x500xf32>, tensor<256x512x3xf32>, tensor<256xf32>) -> tensor<?x256x500xf32>
+    %461 = "onnx.Transpose"(%460) {onnx_node_name = "Transpose_362", perm = [0, 2, 1]} : (tensor<?x256x500xf32>) -> tensor<?x500x256xf32>
+    %462 = "onnx.Constant"() {onnx_node_name = "Constant_363", value = dense<5.000000e-01> : tensor<f32>} : () -> tensor<f32>
+    %463 = "onnx.Mul"(%461, %462) {onnx_node_name = "Mul_364"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %464 = "onnx.Add"(%438, %463) : (tensor<?x500x256xf32>, tensor<?x500x256xf32>) -> tensor<?x500x256xf32>
+    %465 = "onnx.Add"(%464, %241) : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %466 = "onnx.ReduceMean"(%465) {axes = [-1], onnx_node_name = "ReduceMean_366"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %467 = "onnx.Sub"(%465, %466) {onnx_node_name = "Sub_367"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %468 = "onnx.Constant"() {onnx_node_name = "Constant_368", value = dense<2.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %469 = "onnx.Pow"(%467, %468) {onnx_node_name = "Pow_369"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %470 = "onnx.ReduceMean"(%469) {axes = [-1], onnx_node_name = "ReduceMean_370"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %471 = "onnx.Constant"() {onnx_node_name = "Constant_371", value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+    %472 = "onnx.Add"(%470, %471) {onnx_node_name = "Add_372"} : (tensor<?x500x1xf32>, tensor<f32>) -> tensor<?x500x1xf32>
+    %473 = "onnx.Sqrt"(%472) {onnx_node_name = "Sqrt_373"} : (tensor<?x500x1xf32>) -> tensor<?x500x1xf32>
+    %474 = "onnx.Div"(%467, %473) {onnx_node_name = "Div_374"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %475 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %476 = "onnx.Mul"(%474, %475) {onnx_node_name = "Mul_375"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %477 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %478 = "onnx.Add"(%476, %477) {onnx_node_name = "Add_376"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %479 = "onnx.ReduceMean"(%478) {axes = [-1], onnx_node_name = "ReduceMean_377"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %480 = "onnx.Sub"(%478, %479) {onnx_node_name = "Sub_378"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %481 = "onnx.Constant"() {onnx_node_name = "Constant_379", value = dense<2.000000e+00> : tensor<f32>} : () -> tensor<f32>
+    %482 = "onnx.Pow"(%480, %481) {onnx_node_name = "Pow_380"} : (tensor<?x500x256xf32>, tensor<f32>) -> tensor<?x500x256xf32>
+    %483 = "onnx.ReduceMean"(%482) {axes = [-1], onnx_node_name = "ReduceMean_381"} : (tensor<?x500x256xf32>) -> tensor<?x500x1xf32>
+    %484 = "onnx.Constant"() {onnx_node_name = "Constant_382", value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+    %485 = "onnx.Add"(%483, %484) {onnx_node_name = "Add_383"} : (tensor<?x500x1xf32>, tensor<f32>) -> tensor<?x500x1xf32>
+    %486 = "onnx.Sqrt"(%485) {onnx_node_name = "Sqrt_384"} : (tensor<?x500x1xf32>) -> tensor<?x500x1xf32>
+    %487 = "onnx.Div"(%480, %486) {onnx_node_name = "Div_385"} : (tensor<?x500x256xf32>, tensor<?x500x1xf32>) -> tensor<?x500x256xf32>
+    %488 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %489 = "onnx.Mul"(%487, %488) {onnx_node_name = "Mul_386"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %490 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256xf32>} : () -> tensor<256xf32>
+    %491 = "onnx.Add"(%489, %490) {onnx_node_name = "Add_387"} : (tensor<?x500x256xf32>, tensor<256xf32>) -> tensor<?x500x256xf32>
+    %492 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x80xf32>} : () -> tensor<256x80xf32>
+    %493 = "onnx.MatMul"(%491, %492) {onnx_node_name = "MatMul_388"} : (tensor<?x500x256xf32>, tensor<256x80xf32>) -> tensor<?x500x80xf32>
+    %494 = "onnx.Constant"() {value = dense<[0.00247427961, 0.0469999537, 0.0241360031, -0.00981188751, -0.0336534455, -0.0446399972, -0.0242624953, -0.00798383168, -0.00839109067, -0.0118687246, -0.0055474313, -6.80165714E-4, -2.095280e-02, -0.0439546891, -3.519960e-02, -0.00987944938, 0.00261037354, -2.30892794E-4, 0.0100980429, 0.0143732782, 0.0172755402, 0.0172283165, -9.22582927E-4, -0.0109877335, 0.00138603477, 0.0150150685, 0.0169728044, 0.0121562239, 0.01481691, 0.0109904986, 0.017224798, 0.0156412944, 0.0164219402, 0.00157442107, -0.0038693822, -0.00931393355, -5.3730233E-5, 0.00392141286, 0.00689701596, 0.00525999581, 0.0112344977, -2.6724796E-4, 0.00235593622, 0.017769428, 0.0168633964, 0.0255434401, 0.022867471, 0.0265706535, 0.0251485668, 0.0209291689, 0.0267135315, 0.027435828, 0.0234233551, 0.0205677375, 0.0265899897, 0.0217049532, 0.00734632928, 0.0128140347, 0.0234452672, 0.0338194557, 0.0328564122, 0.0334979519, 0.0340759568, 0.0289091915, 0.0313789621, 0.0177365281, 0.0137084518, 0.0148386732, 0.0108953509, 0.0195895638, 0.0170275029, 0.0241541155, 0.020760173, 0.023152845, 0.0265929215, 0.0343107395, 0.0357972905, 0.0411599651, 0.0453623421, 0.0474001169]> : tensor<80xf32>} : () -> tensor<80xf32>
+    %495 = "onnx.Add"(%493, %494) {onnx_node_name = "Add_389"} : (tensor<?x500x80xf32>, tensor<80xf32>) -> tensor<?x500x80xf32>
+    %496 = "onnx.Shape"(%491) {onnx_node_name = "Shape_390"} : (tensor<?x500x256xf32>) -> tensor<3xi64>
+    %497 = "onnx.Constant"() {onnx_node_name = "Constant_391", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %498 = "onnx.Gather"(%496, %497) {axis = 0 : si64, onnx_node_name = "Gather_392"} : (tensor<3xi64>, tensor<i64>) -> tensor<i64>
+    %499 = "onnx.UnsqueezeV11"(%498) {axes = [0], onnx_node_name = "Unsqueeze_393"} : (tensor<i64>) -> tensor<1xi64>
+    %500 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %501 = "onnx.Constant"() {value = dense<80> : tensor<1xi64>} : () -> tensor<1xi64>
+    %502 = "onnx.Concat"(%499, %500, %501) {axis = 0 : si64, onnx_node_name = "Concat_394"} : (tensor<1xi64>, tensor<1xi64>, tensor<1xi64>) -> tensor<3xi64>
+    %503 = "onnx.Reshape"(%495, %502) {onnx_node_name = "Reshape_395"} : (tensor<?x500x80xf32>, tensor<3xi64>) -> tensor<?x?x?xf32>
+    %504 = "onnx.Transpose"(%503) {onnx_node_name = "Transpose_396", perm = [0, 2, 1]} : (tensor<?x?x?xf32>) -> tensor<?x?x?xf32>
+    %505 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x80x5xf32>} : () -> tensor<256x80x5xf32>
+    %506 = "onnx.Constant"() {value = dense<0.000000e+00> : tensor<256xf32>} : () -> tensor<256xf32>
+    %507 = "onnx.Conv"(%504, %505, %506) {dilations = [1], group = 1 : si64, kernel_shape = [5], onnx_node_name = "Conv_397", pads = [2, 2], strides = [1]} : (tensor<?x?x?xf32>, tensor<256x80x5xf32>, tensor<256xf32>) -> tensor<?x256x?xf32>
+    %508 = "onnx.Tanh"(%507) {onnx_node_name = "Tanh_398"} : (tensor<?x256x?xf32>) -> tensor<?x256x?xf32>
+    %509 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256x5xf32>} : () -> tensor<256x256x5xf32>
+    %510 = "onnx.Constant"() {value = dense<0.000000e+00> : tensor<256xf32>} : () -> tensor<256xf32>
+    %511 = "onnx.Conv"(%508, %509, %510) {dilations = [1], group = 1 : si64, kernel_shape = [5], onnx_node_name = "Conv_399", pads = [2, 2], strides = [1]} : (tensor<?x256x?xf32>, tensor<256x256x5xf32>, tensor<256xf32>) -> tensor<?x256x?xf32>
+    %512 = "onnx.Tanh"(%511) {onnx_node_name = "Tanh_400"} : (tensor<?x256x?xf32>) -> tensor<?x256x?xf32>
+    %513 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256x5xf32>} : () -> tensor<256x256x5xf32>
+    %514 = "onnx.Constant"() {value = dense<0.000000e+00> : tensor<256xf32>} : () -> tensor<256xf32>
+    %515 = "onnx.Conv"(%512, %513, %514) {dilations = [1], group = 1 : si64, kernel_shape = [5], onnx_node_name = "Conv_401", pads = [2, 2], strides = [1]} : (tensor<?x256x?xf32>, tensor<256x256x5xf32>, tensor<256xf32>) -> tensor<?x256x?xf32>
+    %516 = "onnx.Tanh"(%515) {onnx_node_name = "Tanh_402"} : (tensor<?x256x?xf32>) -> tensor<?x256x?xf32>
+    %517 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<256x256x5xf32>} : () -> tensor<256x256x5xf32>
+    %518 = "onnx.Constant"() {value = dense<0.000000e+00> : tensor<256xf32>} : () -> tensor<256xf32>
+    %519 = "onnx.Conv"(%516, %517, %518) {dilations = [1], group = 1 : si64, kernel_shape = [5], onnx_node_name = "Conv_403", pads = [2, 2], strides = [1]} : (tensor<?x256x?xf32>, tensor<256x256x5xf32>, tensor<256xf32>) -> tensor<?x256x?xf32>
+    %520 = "onnx.Tanh"(%519) {onnx_node_name = "Tanh_404"} : (tensor<?x256x?xf32>) -> tensor<?x256x?xf32>
+    %521 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<80x256x5xf32>} : () -> tensor<80x256x5xf32>
+    %522 = "onnx.Constant"() {value = dense<[-5.04563795E-5, 1.73078544E-4, 2.81741377E-4, -8.93440446E-5, 8.41725122E-5, 1.22805897E-4, 1.70146654E-4, -1.24935556E-4, -1.64470781E-4, 9.92933419E-5, -5.96582759E-5, -1.08784727E-4, 6.22640073E-5, 2.35804677E-4, 1.65571852E-4, -1.4032294E-4, -4.28018946E-4, 3.35373596E-4, 1.20662036E-4, 2.84484267E-4, -8.00868584E-5, -4.03205806E-4, -1.83554516E-6, -1.47870218E-4, -8.45615286E-5, 2.65101728E-4, 6.2795174E-5, 5.49027463E-5, -1.1508337E-4, 2.66464573E-4, 2.70278833E-5, 1.51768574E-4, 8.92781608E-5, 1.18790151E-4, -2.25504831E-4, -3.67733192E-5, 3.90264933E-4, -2.74613587E-4, 1.51991757E-4, 1.77347363E-4, -1.0283904E-4, -1.40113872E-4, 1.52477704E-4, 3.65556698E-5, -4.36516624E-4, -2.58526125E-5, -2.40783818E-4, -1.61459815E-4, 1.21298708E-5, -2.04064763E-5, -6.35874167E-4, -3.32210271E-4, -1.05925719E-4, 6.15872486E-5, -8.676760e-05, -2.43944232E-5, -4.2506805E-4, -1.69558713E-4, 1.51224624E-4, 3.260214E-5, 1.33865426E-4, -3.75113625E-4, 1.03907099E-4, -1.4788995E-4, -6.99086086E-5, 1.49354368E-4, -1.69424515E-4, -1.49682659E-4, 1.80240168E-4, -8.47967894E-5, 1.29220498E-4, 1.4494441E-4, -7.07077561E-7, -3.06994043E-4, -7.81888738E-5, 7.36245201E-5, -1.64407538E-5, 4.41924858E-5, 4.24164937E-5, 1.05955347E-4]> : tensor<80xf32>} : () -> tensor<80xf32>
+    %523 = "onnx.Conv"(%520, %521, %522) {dilations = [1], group = 1 : si64, kernel_shape = [5], onnx_node_name = "Conv_405", pads = [2, 2], strides = [1]} : (tensor<?x256x?xf32>, tensor<80x256x5xf32>, tensor<80xf32>) -> tensor<?x80x?xf32>
+    %524 = "onnx.Transpose"(%523) {onnx_node_name = "Transpose_406", perm = [0, 2, 1]} : (tensor<?x80x?xf32>) -> tensor<?x?x80xf32>
+    %525 = "onnx.Add"(%503, %524) {onnx_node_name = "Add_407"} : (tensor<?x?x?xf32>, tensor<?x?x80xf32>) -> tensor<?x?x80xf32>
+    %526 = "onnx.Transpose"(%525) {onnx_node_name = "Transpose_408", perm = [0, 2, 1]} : (tensor<?x?x80xf32>) -> tensor<?x80x?xf32>
+    %527 = "onnx.Shape"(%526) {onnx_node_name = "Shape_409"} : (tensor<?x80x?xf32>) -> tensor<3xi64>
+    %528 = "onnx.Constant"() {onnx_node_name = "Constant_410", value = dense<0> : tensor<i64>} : () -> tensor<i64>
+    %529 = "onnx.Gather"(%527, %528) {axis = 0 : si64, onnx_node_name = "Gather_411"} : (tensor<3xi64>, tensor<i64>) -> tensor<i64>
+    %530 = "onnx.UnsqueezeV11"(%529) {axes = [0], onnx_node_name = "Unsqueeze_412"} : (tensor<i64>) -> tensor<1xi64>
+    %531 = "onnx.Constant"() {value = dense<-1> : tensor<1xi64>} : () -> tensor<1xi64>
+    %532 = "onnx.Concat"(%530, %531) {axis = 0 : si64, onnx_node_name = "Concat_413"} : (tensor<1xi64>, tensor<1xi64>) -> tensor<2xi64>
+    %533 = "onnx.Reshape"(%526, %532) {onnx_node_name = "Reshape_414"} : (tensor<?x80x?xf32>, tensor<2xi64>) -> tensor<?x?xf32>
+    return %533 : tensor<?x?xf32>
+  }
+  "onnx.EntryPoint"() {func = @main_graph} : () -> ()
+}
