@@ -286,4 +286,4 @@ for i in range(0, 10):
         digit = i
         prob = prediction[0, i]
 # Print the value with the highest prediction (8 here).
-print("The digit is", digit)
+
