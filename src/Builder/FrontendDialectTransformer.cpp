@@ -186,7 +186,7 @@ private:
     }
   }
 
-  using ImportHandlerType = void (onnx_mlir::detail::FrontendGenImpl::*)(
+  using ImportHandlerType = void (onnx_mlir::detail::FrontendGenImpl::*)(    // ???
       const onnx::NodeProto &);
 
   std::map<std::string, ImportHandlerType> import_handler_map_;
@@ -1335,7 +1335,7 @@ namespace onnx_mlir {
 void ImportFrontendModelInternal(onnx::ModelProto &model, MLIRContext &context,
     OwningOpRef<ModuleOp> &module, ImportOptions options) {
   int originVersion = CURRENT_ONNX_OPSET;
-  // Get the version of the model
+  // Get the version of the model + add shapeInference
   // Code copied from onnx/onnx/version_coverter/convert.cc
   for (auto it = model.opset_import().begin(); it != model.opset_import().end();
        ++it) {
@@ -1344,7 +1344,9 @@ void ImportFrontendModelInternal(onnx::ModelProto &model, MLIRContext &context,
       break;
     }
   }
+  // copied ends here
 
+  // shape inference + verstion-convert model  
   // Didnot do downward convert because support for BatchNorm is missing
   if (options.invokeOnnxVersionConverter &&
       originVersion < CURRENT_ONNX_OPSET) {
@@ -1352,7 +1354,7 @@ void ImportFrontendModelInternal(onnx::ModelProto &model, MLIRContext &context,
         onnx::version_conversion::ConvertVersion(model, CURRENT_ONNX_OPSET);
     if (options.useOnnxModelTypes)
       onnx::shape_inference::InferShapes(convertModel);
-    ImportFrontendModel(convertModel, context, module, options);
+    ImportFrontendModel(convertModel, context, module, options);    // here use FrontendGenImpl.ImportONNXModel
   } else {
     if (options.useOnnxModelTypes)
       onnx::shape_inference::InferShapes(model);
