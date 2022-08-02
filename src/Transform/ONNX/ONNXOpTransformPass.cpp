@@ -133,6 +133,7 @@ void ONNXOpTransformPass::runOnOperation() {
   do {
     previousTag = currentTag;
     OpPassManager dynamicPM("builtin.module");
+    dynamicPM.addPass(onnx_mlir::createShapeInferencePass());
     dynamicPM.addNestedPass<func::FuncOp>(
         onnx_mlir::createDecomposeONNXToONNXPass());
     dynamicPM.addPass(onnx_mlir::createShapeInferencePass());

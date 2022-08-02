@@ -52,6 +52,7 @@ add_onnx_mlir_library(OMONNXOps
   ShapeInference/TopK.cpp
   ShapeInference/Transpose.cpp
   ShapeInference/Unsqueeze.cpp
+  ShapeInference/Conv4.cpp
 
   DEPENDS
   OMHasOnnxSubgraphOpInterfaceIncGen

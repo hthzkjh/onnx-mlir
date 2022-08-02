@@ -22,17 +22,17 @@ def create_initializer_tensor(
 model_input_name = "X"
 X = onnx.helper.make_tensor_value_info(model_input_name,
                                         onnx.TensorProto.FLOAT,
-                                        [None, 3, 32, 32])
+                                        [None, 32, 32, 32])
 model_output_name = "Y"
-model_output_channels = 10
+model_output_channels = 16
 Y = onnx.helper.make_tensor_value_info(model_output_name,
                                         onnx.TensorProto.FLOAT,
                                         [None, model_output_channels, 28, 28])
 
 conv1_output_node_name = model_output_name
 # Dummy weights for conv.
-conv1_in_channels = 3
-conv1_out_channels = 10
+conv1_in_channels = 32
+conv1_out_channels = 16
 conv1_kernel_shape = (5, 5)
 conv1_pads = (0, 0, 0, 0)
 conv1_W = np.ones(shape=(conv1_out_channels, conv1_in_channels,

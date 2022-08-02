@@ -34,7 +34,7 @@ LogicalResult ONNXReshapeOpShapeHelper::computeShape(
   // Initialize context and results.
   outputDims.resize(outputRank);
 
-  // Shape values can be 0, -1, or N (N > 0).
+  // Shape values can be 0, -1, or N (N > 0). 【！！！】
   //   - 0: the output dim is setting to the input dim at the same index.
   //   Thus, it must happen at the index < dataRank.
   //   - -1: the output dim is calculated from the other output dims. No more

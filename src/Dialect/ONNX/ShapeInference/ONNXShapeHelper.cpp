@@ -440,6 +440,7 @@ template struct ONNXOpShapeHelper<ONNXTopKOp>;
 template struct ONNXOpShapeHelper<ONNXTransposeOp>;
 template struct ONNXOpShapeHelper<ONNXUnsqueezeOp>;
 template struct ONNXOpShapeHelper<ONNXUnsqueezeV11Op>;
+// template struct ONNXOpShapeHelper<ONNXConv4Op>;
 
 template struct ONNXOpBroadcastedShapeHelper<Operation>;
 template struct ONNXOpBroadcastedShapeHelper<ONNXExpandOp>;
@@ -449,6 +450,7 @@ template struct ONNXGenericPoolShapeHelper<ONNXAveragePoolOp,
 template struct ONNXGenericPoolShapeHelper<ONNXConvOp, ONNXConvOpAdaptor>;
 template struct ONNXGenericPoolShapeHelper<ONNXMaxPoolSingleOutOp,
     ONNXMaxPoolSingleOutOpAdaptor>;
+template struct ONNXGenericPoolShapeHelper<ONNXConv4Op, ONNXConv4OpAdaptor>;
 
 // Keep template instantiation at the end of the file.
 

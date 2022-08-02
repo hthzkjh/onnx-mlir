@@ -1266,7 +1266,8 @@ private:
     // look up handler for the opName. If not found, create a node
     // for a custom op, and issue a warning.
     auto handler =
-        import_handler_map_.find(node.op_type() + versionStr.c_str());
+        import_handler_map_.find(node.op_type() + versionStr.c_str());    //import_handler_map_["Conv"] = 
+                                                                          // &onnx_mlir::detail::FrontendGenImpl::buildOperation<mlir::ONNXConvOp>;
     if (handler != import_handler_map_.end()) {
       (this->*(handler->second))(node);
     } else {

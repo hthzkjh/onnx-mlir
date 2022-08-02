@@ -81,7 +81,7 @@ SmallVector<Value, 4> transposeVariadicInput(PatternRewriter &rewriter,
     assert(inpType && "Type is not ShapedType");
     ONNXTransposeOp transposeOp = rewriter.create<ONNXTransposeOp>(
         loc, UnrankedTensorType::get(inpType.getElementType()), inp, permAttr);
-    (void)transposeOp.inferShapes([](Region &region) {});
+    (void)transposeOp.inferShapes([](Region &region) {});   // do shape inference function (infer result shape)
     transposedInputs.emplace_back(transposeOp.getResult());
   }
   return transposedInputs;

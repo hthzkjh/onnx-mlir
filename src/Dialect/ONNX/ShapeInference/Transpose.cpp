@@ -45,7 +45,7 @@ LogicalResult ONNXTransposeOpShapeHelper::computeShape(
   }
 
   // Set type for the first output.
-  dimsForOutput() = transposedDims;
+  dimsForOutput() = transposedDims; // get resultDims of transpose(operand), this is shape inference (of Op res, Op input operand shape is known acording to function content)
   return success();
 }
 

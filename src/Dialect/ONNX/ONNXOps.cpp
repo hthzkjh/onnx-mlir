@@ -2013,6 +2013,27 @@ LogicalResult ONNXConvOp::inferShapes(
   return shapeHelperInferShapes<ONNXConvOpShapeHelper, ONNXConvOp,
       ONNXConvOpAdaptor>(*this, elementType);
 }
+LogicalResult ONNXConv4Op::verify() {
+  return success();
+}
+LogicalResult ONNXConv4Op::inferShapes(
+    std::function<void(mlir::Region &)> doShapeInference) {
+  // Generic shape for data input X, weight tensor W, and optional bias B
+  // X: (N x C x D1 x D2 ... x Dn)
+  // W: (M x C/group x k1 x k2 x ... x kn)
+  // B: (M) Optional
+
+  // Cannot infer shape if no shape exists.
+  bool hasBias = !B().getType().isa<NoneType>();
+  if (!X().getType().isa<RankedTensorType>() ||
+      !W().getType().isa<RankedTensorType>() ||
+      (hasBias && !B().getType().isa<RankedTensorType>()))
+    return success();
+
+  auto elementType = X().getType().cast<ShapedType>().getElementType();
+  return shapeHelperInferShapes<ONNXConv4OpShapeHelper, ONNXConv4Op,
+      ONNXConv4OpAdaptor>(*this, elementType);
+}
 
 //===----------------------------------------------------------------------===//
 // ConvTranspose

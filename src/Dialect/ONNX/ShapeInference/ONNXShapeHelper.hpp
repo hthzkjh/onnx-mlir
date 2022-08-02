@@ -45,7 +45,7 @@ using DimsExpr = llvm::SmallVector<IndexExpr, 4>;
 /// When defining support for a new op, add one such stuct which must
 /// minimally compute the outputDims present in the parent class. Computation
 /// should be performed using a `computeShape` function. Return success on
-/// successful computation of all the IndexExpr. During shape inference, object
+/// successful computation of all the 【IndexExpr】. During shape inference, object
 /// is built using a null-ptr rewriter; during lowering, the rewriter is nonnull
 /// and will be used to generate code.
 ///
@@ -246,6 +246,8 @@ DECLARE_SHAPE_HELPER(ONNXTopKOp)
 DECLARE_SHAPE_HELPER(ONNXTransposeOp)
 DECLARE_SHAPE_HELPER(ONNXUnsqueezeOp)
 DECLARE_SHAPE_HELPER(ONNXUnsqueezeV11Op)
+// DECLARE_SHAPE_HELPER(ONNXConv4Op)
+
 #undef DECLARE_SHAPE_HELPER
 
 // Compute the data selected by the Shape operator.
@@ -358,6 +360,7 @@ struct ONNXRoiAlignOpShapeHelper
 DECLARE_POOL_SHAPE_HELPER(ONNXAveragePoolOp)
 DECLARE_POOL_SHAPE_HELPER(ONNXConvOp)
 DECLARE_POOL_SHAPE_HELPER(ONNXMaxPoolSingleOutOp)
+DECLARE_POOL_SHAPE_HELPER(ONNXConv4Op)
 #undef DECLARE_POOL_SHAPE_HELPER
 
 #define DECLARE_BROADCASTED_SHAPE_HELPER(OpName)                               \
