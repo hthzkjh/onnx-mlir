@@ -22,12 +22,12 @@ def create_initializer_tensor(
 model_input_name = "X"
 X = onnx.helper.make_tensor_value_info(model_input_name,
                                         onnx.TensorProto.FLOAT,
-                                        [None, 32, 32, 32])
+                                        [None, 32, 22, 22])
 model_output_name = "Y"
 model_output_channels = 16
 Y = onnx.helper.make_tensor_value_info(model_output_name,
                                         onnx.TensorProto.FLOAT,
-                                        [None, model_output_channels, 28, 28])
+                                        [None, model_output_channels, 18, 18])
 
 conv1_output_node_name = model_output_name
 # Dummy weights for conv.
@@ -35,8 +35,8 @@ conv1_in_channels = 32
 conv1_out_channels = 16
 conv1_kernel_shape = (5, 5)
 conv1_pads = (0, 0, 0, 0)
-conv1_W = np.ones(shape=(conv1_out_channels, conv1_in_channels,
-                          *conv1_kernel_shape)).astype(np.float32)
+conv1_W = np.ones(shape=(1, 4, 4, 2, 16, 
+                          *conv1_kernel_shape),dtype=np.float32)
 conv1_B = np.ones(shape=(conv1_out_channels)).astype(np.float32)
 # Create the initializer tensor for the weights.
 conv1_W_initializer_tensor_name = "Conv1_W"
@@ -82,6 +82,6 @@ graph_def = helper.make_graph(
 model_def = helper.make_model(graph_def, producer_name='onnx-example')
 
 print('The model is:\n{}'.format(model_def))
-onnx.checker.check_model(model_def)
-onnx.save(model_def, "conv.onnx")
+# onnx.checker.check_model(model_def)
+onnx.save(model_def, "conv2.onnx")
 print('The model is checked!')

@@ -1,0 +1,37 @@
+(gdb) where
+#0  __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:50
+#1  0x00007f96648e4859 in __GI_abort () at abort.c:79
+#2  0x00007f96648e4729 in __assert_fail_base (fmt=0x7f9664a7a588 "%s%s%s:%u: %s%sAssertion `%s' failed.\n%n",
+    assertion=0x55b53243c380 "i < memRank && \"index out of bound\"",
+    file=0x55b532439780 "../src/Dialect/Mlir/IndexExpr.cpp", line=1648, function=<optimized out>) at assert.c:92
+#3  0x00007f96648f5fd6 in __GI___assert_fail (assertion=0x55b53243c380 "i < memRank && \"index out of bound\"",
+    file=0x55b532439780 "../src/Dialect/Mlir/IndexExpr.cpp", line=1648,
+    function=0x55b53243c2f0 "onnx_mlir::IndexExpr onnx_mlir::MemRefBoundsIndexCapture::get(uint64_t) [with INDEX = onnx_mlir::DimIndexExpr; uint64_t = long unsigned int]") at assert.c:101
+#4  0x000055b52fcf6a96 in onnx_mlir::MemRefBoundsIndexCapture::get<onnx_mlir::DimIndexExpr> (this=0x7ffc97cd68f0, i=4)
+    at ../src/Dialect/Mlir/IndexExpr.cpp:1648
+#5  0x000055b52fceddaa in onnx_mlir::MemRefBoundsIndexCapture::getDim (this=0x7ffc97cd68f0, i=4)
+    at ../src/Dialect/Mlir/IndexExpr.cpp:1606
+
+#6  0x000055b52fcdfbd3 in onnx_mlir::ONNXTransposeOpShapeHelper::computeShape (this=0x7ffc97cd6ac0, operandAdaptor=...)
+    at ../src/Dialect/ONNX/ShapeInference/Transpose.cpp:44
+#7  0x000055b52faa50d0 in shapeHelperInferShapes<onnx_mlir::ONNXTransposeOpShapeHelper, mlir::ONNXTransposeOp, mlir::ONNXTransposeOpAdaptor> (op=..., elementType=...) at ../src/Dialect/ONNX/ONNXOps.cpp:159
+#8  0x000055b52f8ef3bf in mlir::ONNXTransposeOp::inferShapes(std::function<void (mlir::Region&)>) (
+    this=0x7ffc97cd6cf8, doShapeInference=...) at ../src/Dialect/ONNX/ONNXOps.cpp:1645
+#9  0x000055b52fc61a5a in mlir::detail::ShapeInferenceInterfaceTraits::Model<mlir::ONNXTransposeOp>::inferShapes(mlir::detail::ShapeInferenceInterfaceTraits::Concept const*, mlir::Operation*, std::function<void (mlir::Region&)>) (
+    impl=0x55b534b77810, tablegen_opaque_val=0x55b534b84ae0, shapeInferenceFunc=...)
+    at ./src/Interface/ShapeInferenceOpInterface.hpp.inc:54
+#10 0x000055b52f6cbb3b in mlir::ShapeInference::inferShapes(std::function<void (mlir::Region&)>) (this=0x7ffc97cd6dd0,
+    shapeInferenceFunc=...) at ./src/Interface/ShapeInferenceOpInterface.cpp.inc:10
+#11 0x000055b52f6c6018 in onnx_mlir::(anonymous namespace)::ShapeInferencePass::runShapeInferenceOnRegion (r=...)
+    at ../src/Transform/ONNX/ShapeInferencePass.cpp:123
+#12 0x000055b52f6c6243 in onnx_mlir::(anonymous namespace)::ShapeInferencePass::runShapeInferenceOn (f=...)
+    at ../src/Transform/ONNX/ShapeInferencePass.cpp:136
+--Type <RET> for more, q to quit, c to continue without paging--
+#13 0x000055b52f6c5cd8 in onnx_mlir::(anonymous namespace)::ShapeInferencePass::runOnOperation (this=0x55b534d980e0)
+    at ../src/Transform/ONNX/ShapeInferencePass.cpp:86
+#14 0x000055b53065fbda in mlir::detail::OpToOpPassAdaptor::run(mlir::Pass*, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int) ()
+#15 0x000055b5306602e0 in mlir::detail::OpToOpPassAdaptor::runPipeline(llvm::iterator_range<llvm::pointee_iterator<std::unique_ptr<mlir::Pass, std::default_delete<mlir::Pass> >*, mlir::Pass> >, mlir::Operation*, mlir::AnalysisManager, bool, unsigned int, mlir::PassInstrumentor*, mlir::PassInstrumentation::PipelineParentInfo const*) ()
+#16 0x000055b530661067 in mlir::PassManager::run(mlir::Operation*) ()
+#17 0x000055b52f32ea0c in onnx_mlir::compileModule (module=..., context=..., outputNameNoExt="test2",
+    emissionTarget=onnx_mlir::EmitONNXIR) at ../src/Compiler/CompilerUtils.cpp:894
+#18 0x000055b52f2f4b7b in main (argc=4, argv=0x7ffc97cd7e88) at ../src/onnx-mlir.cpp:89

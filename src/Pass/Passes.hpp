@@ -22,6 +22,8 @@ class Pass;
 
 namespace onnx_mlir {
 
+// std::unique_ptr<mlir::Pass> createTransposeWToConv4Pass();
+
 /// Pass for ONNX graph level optimization
 std::unique_ptr<mlir::Pass> createONNXOpTransformPass();
 std::unique_ptr<mlir::Pass> createONNXOpTransformPass(

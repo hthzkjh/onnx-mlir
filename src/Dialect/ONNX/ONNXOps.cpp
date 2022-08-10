@@ -2013,6 +2013,7 @@ LogicalResult ONNXConvOp::inferShapes(
   return shapeHelperInferShapes<ONNXConvOpShapeHelper, ONNXConvOp,
       ONNXConvOpAdaptor>(*this, elementType);
 }
+
 LogicalResult ONNXConv4Op::verify() {
   return success();
 }

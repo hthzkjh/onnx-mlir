@@ -8,91 +8,178 @@
 //
 //===----------------------------------------------------------------------===//
 
-// #include "src/Dialect/ONNX/ONNXOpsHelper.hpp"
 #include "src/Dialect/ONNX/ShapeInference/ONNXShapeHelper.hpp"
-// #include "src/Dialect/ONNX/ShapeInference/Conv.cpp"
+#include "src/Dialect/ONNX/ONNXOpsHelper.hpp"
 
 using namespace mlir;
 
 namespace onnx_mlir {
 
-ONNXConv4OpShapeHelper::ONNXConv4OpShapeHelper(
-    ONNXConv4Op *newOp, IndexExprScope *inScope)
-    : ONNXGenericPoolShapeHelper<ONNXConv4Op, ONNXConv4OpAdaptor>(
-          newOp, true /*hasFilter*/, false /*hasCeil*/, inScope) {}
-
-ONNXConv4OpShapeHelper::ONNXConv4OpShapeHelper(ONNXConv4Op *newOp,
-    OpBuilder *rewriter, ArrayValueIndexCapture::GetDenseVal fGetDenseVal,
-    ArrayValueIndexCapture::LoadVal fLoadVal, IndexExprScope *inScope)
-    : ONNXGenericPoolShapeHelper<ONNXConv4Op, ONNXConv4OpAdaptor>(newOp,
-          true /*hasFilter*/, false /*hasCeil*/, rewriter, fGetDenseVal,
-          fLoadVal, inScope) {}
-
 LogicalResult ONNXConv4OpShapeHelper::computeShape(
     ONNXConv4OpAdaptor operandAdaptor) {
   
-    mlir::LogicalResult outputFlag = ONNXGenericPoolShapeHelper<ONNXConv4Op,
-      ONNXConv4OpAdaptor>::computeShape(operandAdaptor, operandAdaptor.W(),
-      op->kernel_shape(), op->pads(), op->strides(), op->dilations());
-     if (failed(outputFlag)) {
-        return op->emitError("Failed to scan Conv4 parameters successfully");
-     }
-     
+  DimsExpr outputDims;
+
+  Value filterValue = operandAdaptor.W();
+  Optional<ArrayAttr> kernelShapeOpt = op->kernel_shape();
+  Optional<ArrayAttr> padOpt = op->pads();
+  Optional<ArrayAttr> strideOpt = op->strides();
+  Optional<ArrayAttr> dilationOpt = op->dilations();
+
+  bool ceilMode = false;
+  bool hasFilter = true;
+  llvm::SmallVector<IndexExpr, 2> kernelShape;
+  llvm::SmallVector<IndexExpr, 4> pads;
+  llvm::SmallVector<int64_t, 2> strides;
+  llvm::SmallVector<int64_t, 2> dilations;
+
+  Value xValue = (Value)operandAdaptor.X();
+  int64_t rank = xValue.getType().cast<ShapedType>().getRank() - 1;
+  int64_t spatialOffset = 2;
+  int64_t spatialRank = rank - spatialOffset;
+
+  MemRefBoundsIndexCapture XBounds(operandAdaptor.X());
+  MemRefBoundsIndexCapture WBounds(filterValue);
+
+  // Fill the stride, dilation, kernel.
+  for (int i = 0; i < spatialRank; ++i) {
+    // Strides, default 1.
+    strides.emplace_back(
+        strideOpt.hasValue() ? ArrayAttrIntVal(strideOpt, i) : 1);
+    // Dilations, default 1.
+    dilations.emplace_back(
+        dilationOpt.hasValue() ? ArrayAttrIntVal(dilationOpt, i) : 1);
+    // Kernel shape from attribute, default from Weight's spatial dims.
+    if (kernelShapeOpt.hasValue()) {
+      kernelShape.emplace_back(
+          LiteralIndexExpr(ArrayAttrIntVal(kernelShapeOpt, i)));
+    } else if (hasFilter) {
+      int ii = i + spatialOffset + 3; // W shape
+      kernelShape.emplace_back(WBounds.getSymbol(ii)); // what is symbol? shape?
+    } else {
+      llvm_unreachable("should have tested the availability of kernel shape");
+    }
+  }
+  // Pads, at this stage a given compile-time literal or default 0.
+  for (int i = 0; i < 2 * spatialRank; ++i) {
+    int64_t p = padOpt.hasValue() ? ArrayAttrIntVal(padOpt, i) : 0;
+    pads.emplace_back(LiteralIndexExpr(p));
+  }
+
+  // Handle output size: start by inserting batch size and output channels.
+  
+  outputDims.emplace_back(XBounds.getDim(0));
+  if (hasFilter)
+    outputDims.emplace_back(WBounds.getDim(0) * 16); // CO may be different from CI.
+  // else
+  //   outputDims.emplace_back(XBounds.getDim(1)); // CO is CI. 
+
+  // Insert dimensions for the spatial axes. From MaxPool:
+  // https://github.com/onnx/onnx/blob/main/docs/Operators.md#maxpool
+  //
+  // NOSET:
+  //  * O[i] = floor((I[i] + P[i] - ((K[i] - 1) * d[i] + 1)) / s[i] + 1)
+  // VALID:
+  // * O[i] = floor((I[i] - {(K[i] - 1) * d[i] + 1} + 1) / s[i])
+  // * P = 0
+  // SAME_LOWER or SAME_UPPER:
+  // * O[i] = ceil(I[i] / s[i])
+  // * p' = (O[i] - 1) * s[i] + ((K[i] - 1) * d[i] + 1) - I[i]
+  // * P[i] = p' / 2, if odd, first or second are increased by one.
+  auto autoPad = op->auto_pad();
+  auto autoFlag = true;
+  LiteralIndexExpr zeroIE(0);
+  LiteralIndexExpr oneIE(1);
+  for (int64_t i = 0; i < spatialRank; ++i) {
+    int64_t ii = i + spatialOffset;
+    IndexExpr I = XBounds.getDim(ii);
+    IndexExpr K = kernelShape[i];
+    LiteralIndexExpr d(dilations[i]);
+    LiteralIndexExpr s(strides[i]);
+    IndexExpr t1 = K - oneIE;
+    IndexExpr kdTerm = t1 * d + oneIE; // (k - 1) * d + 1
+    if (autoPad == "NOTSET") {
+      IndexExpr p = pads[i] + pads[i + spatialRank]; // Sum both pads.
+      IndexExpr t1 = I + p; // Compute floor/ceil((I + p - kdTerm) / s) + 1.
+      IndexExpr t2 = t1 - kdTerm;
+      IndexExpr O;
+      if (ceilMode)
+        O = t2.ceilDiv(s);
+      else
+        O = t2.floorDiv(s);
+      O = O + oneIE;
+      // Set output dim, and pads already set, nothing more to do.
+      outputDims.emplace_back(O);
+    } 
     
-    // after this function, ONNXGenericPoolShapeHelper<ONNXConv4Op,ONNXConv4OpAdaptor>.dimsForOutput() == self dimsForOutput()
-    // SmallVector<int64_t, 4> outputDims_conv;
-    // IndexExpr::getShape(dimsForOutput(), outputDims_conv);
-    DimsExpr outputDims = dimsForOutput();
-    // convert from SmallVector<int64_t, 4> to using DimsExpr = llvm::SmallVector<IndexExpr, 4>;
-
+    else if (autoPad == "VALID") {
+      IndexExpr t1 = I - kdTerm; // Compute ceil((I - kdTerm +1)/s).
+      IndexExpr t2 = t1 + oneIE;
+      IndexExpr O = t2.ceilDiv(s);
+      // Set output dim, and pads already set to zero, nothing more to do.
+      outputDims.emplace_back(O);
+    } else if (autoPad == "SAME_UPPER" || autoPad == "SAME_LOWER") {
+      // Compute output as O = ceil(I/s).
+      IndexExpr O = I.ceilDiv(s);
+      outputDims.emplace_back(O);
+      // Compute sum of pads padSum = (O -1)*s + kdTerm - I.
+      IndexExpr t1 = O - oneIE;
+      IndexExpr t2 = t1 * s + kdTerm;
+      IndexExpr t3 = t2 - I;
+      IndexExpr padSum = IndexExpr::max(t3, zeroIE);
+      // Single pad value is padSump / 2.
+      IndexExpr p = padSum.floorDiv(2);
+      // Increment is 1 when pp % 2 != 0
+      IndexExpr test = (padSum % 2) != zeroIE;
+      IndexExpr inc = IndexExpr::select(test, oneIE, zeroIE);
+      // Increment 1st value for SAME_LOWER and 2nd for SAME_UPPER.
+      if (autoPad == "SAME_UPPER") {
+        pads[i] = p;
+        pads[i + spatialRank] = p + inc;
+      } else { // SAME_LOWER.
+        pads[i] = p + inc;
+        pads[i + spatialRank] = p;
+      }
+    }
     
-//     auto elementType = operandAdaptor.X().getType().cast<ShapedType>().getElementType();
-//   return shapeHelperInferShapes<ONNXConv4OpShapeHelper, ONNXConv4Op,ONNXConv4OpAdaptor>(*this, elementType);
-//   in shapeHelperInferShapes
-//   if (failed(shapeHelper.computeShape(operandAdaptor)))
-//     return op.emitError("Failed to scan " + OP::getOperationName() +
-//                         " parameters successfully");
+  }
 
-// // using DimsExpr = llvm::SmallVector<IndexExpr, 4>;
-//   SmallVector<int64_t, 4> outputDims;
-//   IndexExpr::getShape(shapeHelper.dimsForOutput(), outputDims);
-//   op.getResult().setType(RankedTensorType::get(outputDims, elementType));
+#if DEBUG
+  if (true) {
+  // if (outputDims.size() == 4) {
+    cerr << "2d conv const params";
+    cerr << " rank: " << outputDims.size() ;
+    if (outputDims[0].isLiteral())
+      cerr << ", N " << outputDims[0].getLiteral();
+    if (outputDims[1].isLiteral())
+      cerr << ", CO " << outputDims[1].getLiteral();
+    if (outputDims[2].isLiteral())
+      cerr << ", WO " << outputDims[2].getLiteral();
+    if (outputDims[3].isLiteral())
+      cerr << ", HO " << outputDims[3].getLiteral();
+    if (pads[0].isLiteral())
+      cerr << ", ph begin " << pads[0].getLiteral();
+    if (pads[2].isLiteral())
+      cerr << ", ph end " << pads[2].getLiteral();
+    if (pads[1].isLiteral())
+      cerr << ", pw begin " << pads[1].getLiteral();
+    if (pads[3].isLiteral())
+      cerr << ", pw end " << pads[3].getLiteral();
+    cerr << endl;
+  }
+#endif
+  outputDims.resize(outputDims.size() + 1 );
+  auto c = outputDims[1].floorDiv(16);
+  outputDims[1] = c;
+  auto c_zero = c -c;
+  onnx_mlir::IndexExpr c_16(c_zero + 16);
+  outputDims[4] = c_16;
+  // outputDims[0] = c_zero;
+  // outputDims[1] = c_zero;
+  // Set type for the first output.
+  dimsForOutput() = outputDims;
+  return success();
 
-    
-
-    // outputDims.resize(inputRank);
-    // MemRefBoundsIndexCapture inputBounds(input);
-    DimIndexExpr N(outputDims[0]);
-    DimIndexExpr C(outputDims[1]);
-    DimIndexExpr H(outputDims[2]);
-    DimIndexExpr W(outputDims[3]);
-    outputDims.resize(5);
-    auto cc = C - C;
-    llvm::SmallVector<IndexExpr, 5> output({N, C.ceilDiv(16), cc+16, H, W});
-    // output.emplace_back(N);
-    // output.emplace_back(C.ceilDiv(16));
-    // output.emplace_back(cc + 16);
-    // output.emplace_back(H);
-    // output.emplace_back(W);
-
-    // int64_t cc = 16;
-    // int w = W.getValue().getImpl()->getKind();
-    // MathBuilder createMath(scope->getRewriter(), op->getLoc());
-    // Value indexVal = createMath.castToIndex(cc);
-    // auto cc = C - C;
-    outputDims[0] = N;
-    outputDims[1] = C.ceilDiv(16);
-    outputDims[2] = H;
-    outputDims[3] = W;
-    outputDims[4] = cc + 16;  // resize 没用，这里用5也不报错
-    //  error: ambiguous overload for 'operator=' (operand types are 'onnx_mlir::IndexExpr' and 'int64_t' {aka 'long int'})
-    // watch /Dialect/ONNX/MLIR/IndexExpre.cpp, need a IndexExpr to interaction with int
-
-  // Save the final result.
-    dimsForOutput() = outputDims;
-    // dimsForOutput() = output;
-    // std::cout << outputDims.shape() << std::endl;
-    return success();
 }
 
 

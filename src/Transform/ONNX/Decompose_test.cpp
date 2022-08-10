@@ -125,7 +125,7 @@ Value createSequenceConstructOp(
 
 } // namespace onnx_mlir
 
-namespace  {
+namespace onnx_mlir {
 /// Include the patterns defined in the Declarative Rewrite framework.
 #include "src/Transform/ONNX/ONNXDecompose.inc"
 
@@ -168,6 +168,8 @@ struct DecomposeConvPattern : public ConversionPattern {
     ONNXConvOp convOp = ::llvm::dyn_cast<ONNXConvOp>(op0);
     Value x = convOp.X();
     Type xType = x.getType();
+
+
     auto_pad = op0->getAttrOfType<StringAttr>("auto_pad");
     dilation = op0->getAttrOfType<ArrayAttr>("dilations");
     group = op0->getAttrOfType<IntegerAttr>("group");
@@ -175,72 +177,45 @@ struct DecomposeConvPattern : public ConversionPattern {
     pads = op0->getAttrOfType<ArrayAttr>("pads");
     stride = op0->getAttrOfType<ArrayAttr>("strides");
 
+
+    // Rewrite
     Location odsLoc = rewriter.getFusedLoc({op0->getLoc()});
+
 
     llvm::ArrayRef<int64_t> shape_1 = x.getType().cast<ShapedType>().getShape();
 
     Type type_1 = x.getType().cast<ShapedType>().getElementType();
     Type reshape1Type = RankedTensorType::get({shape_1[0], shape_1[1] / 16, 16, shape_1[2], shape_1[3]}, type_1);
     Value shape111 = rewriter.create<ONNXConstantOp>(odsLoc, nullptr, rewriter.getI64TensorAttr({shape_1[0], shape_1[1] / 16, 16, shape_1[2], shape_1[3]})).getResult();
+    // Value shape111 = rewriter.create<ONNXConstantOp>(odsLoc, nullptr, rewriter.getI64TensorAttr({shape_1[2], shape_1[1], shape_1[0], shape_1[3]})).getResult();
     Value value1 = rewriter.create<ONNXReshapeOp>(odsLoc, reshape1Type, x, shape111); 
 
-    SmallVector<int64_t, 5> perm1({0,1,3,4,2});
+    SmallVector<int64_t, 5> perm1({1,2,3,4,0});
     ArrayRef<int64_t> permArrayW1(perm1);
     ArrayAttr permAttrW1 = rewriter.getI64ArrayAttr(permArrayW1);
-    RankedTensorType transpose1Type = RankedTensorType::get({shape_1[0], shape_1[1] / 16,shape_1[2], shape_1[3], 16}, type_1);
-    Value transposeOp1 = rewriter.create<ONNXTransposeOp>(odsLoc, transpose1Type, value1, permAttrW1);
+    SmallVector<int64_t, 4> transpose1Shape({shape_1[1] / 16, 16, shape_1[2], shape_1[3], shape_1[0]});
+    RankedTensorType transpose1Type = RankedTensorType::get(transpose1Shape, type_1);
+    Value value2 = rewriter.create<ONNXTransposeOp>(odsLoc, transpose1Type, value1, permAttrW1);
 
-    ArrayRef<int64_t> shape_3 = convOp.Y().getType().cast<ShapedType>().getShape();
+    // Type conv4Type = RankedTensorType::get({shape_1[0], shape_1[1] / 16, shape_1[2], shape_1[3], 16}, type_1);
+    // Value value3 = rewriter.create<ONNXConv4Op>(odsLoc, conv4Type, transposeOp1,
+    //   convOp.W(), convOp.B(), auto_pad, dilation, group, kernel_shape, pads, stride);
 
-    // Value w = convOp.W();
-    // ArrayRef<int64_t> shape_w = w.getType().cast<ShapedType>().getShape();
-    // Type type_w = w.getType().cast<ShapedType>().getElementType();
-    // Type reshape_w_Type = RankedTensorType::get({shape_w[0] / 16, 4, 4, shape_w[1] / 16, 16, shape_w[2], shape_w[3]}, type_1);
-    // Value shape_ww = rewriter.create<ONNXConstantOp>(odsLoc, nullptr, rewriter.getI64TensorAttr({shape_w[0] / 16, 4, 4, shape_w[1] / 16, 16, shape_w[2], shape_w[3]})).getResult();
-    // Value value_w = rewriter.create<ONNXReshapeOp>(odsLoc, reshape_w_Type, w, shape_ww); 
-
-
-    Type conv4Type = RankedTensorType::get({shape_3[0], shape_3[1] / 16, shape_3[2], shape_3[3], 16}, type_1);
-    Value value3 = rewriter.create<ONNXConv4Op>(odsLoc, conv4Type, transposeOp1,
-      convOp.W(), convOp.B(), auto_pad, dilation, group, kernel_shape, pads, stride);
-
-    
-    ArrayRef<int64_t> shape_2 = value3.getType().cast<ShapedType>().getShape();
-
-    SmallVector<int64_t, 5> perm2({0,1,4,2,3});
+    SmallVector<int64_t, 5> perm2({1,0,2,3, 4});
     ArrayRef<int64_t> permArrayW2(perm2);
     ArrayAttr permAttrW2 = rewriter.getI64ArrayAttr(permArrayW2);
-    RankedTensorType transpose2Type = RankedTensorType::get({shape_3[0], shape_3[1]/16, 16, shape_3[2], shape_3[3]}, type_1);
-    // RankedTensorType transpose2Type = RankedTensorType::get({shape_2[0], shape_2[1], shape_2[4], shape_2[3], shape_2[2]}, type_1);
-    Value value4 = rewriter.create<ONNXTransposeOp>(odsLoc, transpose2Type, value3, permAttrW2);        
-    
+    SmallVector<int64_t, 4> transpose2Shape({ 16, shape_1[1] / 16, shape_1[2], shape_1[3], shape_1[0]});
+    RankedTensorType transpose2Type = RankedTensorType::get(transpose2Shape, type_1);
+    Value value4 = rewriter.create<ONNXTransposeOp>(odsLoc, transpose2Type, value2, permAttrW2);   
 
-    
-   
-    // RankedTensorType value4ShapeType = value4.dyn_cast<onnx_mlir::ONNXTransposeOP>().getResult().getShape().dyn_cast<RankedTensorType>();
-    ArrayRef<int64_t> value4Vector = value4.getType().cast<ShapedType>().getShape();
-    int16_t rank1 = value1.getType().cast<ShapedType>().getRank();
-    // auto reshapeOp1 = llvm::dyn_cast<mlir::memref::ReshapeOp>(value1);
-    // auto rank11 = reshapeOp1.getResult().cast<ShapedType>().getRank();
-    int16_t rank2 = transposeOp1.getType().cast<ShapedType>().getRank();
-    int16_t rank3 = value3.getType().cast<ShapedType>().getRank();
-    int16_t rank4 = value4.getType().cast<ShapedType>().getRank();
-    // std:: cout << type_1.dump() << std::endl;
-    // type_1.print(std::cout);
-    std:: cout << rank1 << " " << rank2 << " " << rank3 << " " <<rank4 << " " << std::endl;
-    // ONNXReshapeOpAdaptor operandAdaptor(operands, op->getAttrDictionary()); // Conversion/ONNXToMhlo/Tensor/Reshape.cpp:36:
-    
 
-    // Value value5 = rewriter.create<ONNXReshapeOp>(odsLoc, xType, value4, nullptr); // pass ok
-    // Value shape222 = rewriter.create<ONNXConstantOp>(odsLoc, nullptr, rewriter.getI64TensorAttr({shape_2[0], shape_2[1] * shape_2[4], shape_2[3], shape_2[2]})).getResult();
-    // Type reshape2Type = RankedTensorType::get({shape_2[0], shape_2[1] * shape_2[4], shape_2[3], shape_2[2]}, type_1); 
-    Value shape222 = rewriter.create<ONNXConstantOp>(odsLoc, nullptr, rewriter.getI64TensorAttr({shape_3[0], shape_3[1], shape_3[2], shape_3[2]})).getResult();
-    Type reshape2Type = RankedTensorType::get({shape_3[0], shape_3[1], shape_3[2], shape_3[2]}, type_1); 
+    // Value shape222 = rewriter.create<ONNXConstantOp>(odsLoc, nullptr, rewriter.getI64TensorAttr({value4Vector[0], value4Vector[1] * value4Vector[2], value4Vector[3], value4Vector[4]})).getResult();
+    Value shape222 = rewriter.create<ONNXConstantOp>(odsLoc, nullptr, rewriter.getI64TensorAttr({shape_1[0], shape_1[1], shape_1[2], shape_1[3]})).getResult();
+    Type reshape2Type = RankedTensorType::get({shape_1[0], shape_1[1], shape_1[2], shape_1[3]}, type_1); // 编译通过，执行不通过(原因在于上面不是5维是4维啦)
     Value value5 = rewriter.create<ONNXReshapeOp>(odsLoc, reshape2Type, value4, shape222); 
-    int16_t rank5 = value5.getType().cast<ShapedType>().getRank();
-    std::cout << rank5 << std::endl;
 
-    
+         
+
     rewriter.replaceOp(op0, value5);
     return success();
   }
@@ -248,10 +223,6 @@ struct DecomposeConvPattern : public ConversionPattern {
 
 
 
-void populateDecomposingONNXBeforePatterns(
-    RewritePatternSet &patterns, MLIRContext *ctx) {
-  patterns.add<DecomposeConvPattern>(ctx);
-}
 
 
 
@@ -260,12 +231,18 @@ struct DecomposeONNXToONNXPass
     : public PassWrapper<DecomposeONNXToONNXPass, OperationPass<func::FuncOp>> {
   MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(DecomposeONNXToONNXPass)
 
+  DecomposeONNXToONNXPass() = default;
+  DecomposeONNXToONNXPass(const DecomposeONNXToONNXPass &pass) {}
+
   StringRef getArgument() const override { return "decompose-onnx"; }
 
   StringRef getDescription() const override {
     return "Decompose ONNX operations into composition of other ONNX "
            "operations.";
   }
+
+  Option<std::string> target{*this, "target",
+    llvm::cl::desc("Target Dialect to decompose into"), ::llvm::cl::init("")};
 
   void runOnOperation() final;
 };
@@ -280,6 +257,7 @@ void DecomposeONNXToONNXPass::runOnOperation() {
 
   // These ops will be decomposed into other ONNX ops. Hence, they will not be
   // available after this pass.
+     // this is ok
   target.addIllegalOp<ONNXClipV6Op>();
   target.addIllegalOp<ONNXClipV11Op>();
   target.addIllegalOp<ONNXClipV12Op>();
@@ -299,11 +277,12 @@ void DecomposeONNXToONNXPass::runOnOperation() {
   target.addIllegalOp<ONNXUpsampleOp>();
   target.addIllegalOp<ONNXUpsampleV9Op>();
   target.addIllegalOp<ONNXUpsampleV7Op>();
+  
 
   RewritePatternSet patterns(context);
   populateWithGenerated(patterns);
-  populateDecomposingONNXBeforePatterns(patterns, context);
-  target.addIllegalOp<ONNXConvOp>();    // this is ok
+  patterns.insert<onnx_mlir::DecomposeConvPattern>(&getContext());
+  target.addIllegalOp<ONNXConvOp>(); 
 
   if (failed(applyPartialConversion(function, target, std::move(patterns))))
     signalPassFailure();

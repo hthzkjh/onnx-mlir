@@ -1,0 +1,16 @@
+module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128", llvm.target_triple = "x86_64-unknown-linux-gnu"} {
+  func @main_graph(%arg0: tensor<?x32x32x32xf32>) -> tensor<?x16x28x28xf32> attributes {input_names = ["input"], output_names = ["output"]} {
+    %0 = "onnx.Constant"() {value = opaque<"elided_large_const", "0xDEADBEEF"> : tensor<16x32x5x5xf32>} : () -> tensor<16x32x5x5xf32>
+    %1 = "onnx.Constant"() {value = dense<[-0.0311726164, 0.00564841973, 0.0266528595, 0.0309007596, -0.0255964529, -0.0275199246, -1.60141179E-4, 0.0290375482, -0.0211829767, 0.0248979442, 0.0140762897, 0.030085871, -0.0125815636, -0.0110986819, 0.0216253884, -0.033126466]> : tensor<16xf32>} : () -> tensor<16xf32>
+    %2 = "onnx.Constant"() {value = dense<[-1, 2, 16, 32, 32]> : tensor<5xi64>} : () -> tensor<5xi64>
+    %3 = "onnx.Reshape"(%arg0, %2) : (tensor<?x32x32x32xf32>, tensor<5xi64>) -> tensor<?x2x16x32x32xf32>
+    %4 = "onnx.Transpose"(%3) {perm = [0, 1, 3, 4, 2]} : (tensor<?x2x16x32x32xf32>) -> tensor<?x2x32x32x16xf32>
+    %5 = "onnx.Conv4"(%4, %0, %1) {dilations = [1, 1], group = 1 : si64, kernel_shape = [5, 5], pads = [0, 0, 0, 0], strides = [1, 1]} : (tensor<?x2x32x32x16xf32>, tensor<16x32x5x5xf32>, tensor<16xf32>) -> tensor<?x1x28x28x16xf32>
+    %6 = "onnx.Transpose"(%5) {perm = [0, 1, 4, 2, 3]} : (tensor<?x1x28x28x16xf32>) -> tensor<?x1x16x28x28xf32>
+    %7 = "onnx.Constant"() {value = dense<[-1, 16, 28, 28]> : tensor<4xi64>} : () -> tensor<4xi64>
+    %8 = "onnx.Reshape"(%6, %7) : (tensor<?x1x16x28x28xf32>, tensor<4xi64>) -> tensor<?x16x28x28xf32>
+    %9 = "onnx.Relu"(%8) {onnx_node_name = "Relu_1"} : (tensor<?x16x28x28xf32>) -> tensor<?x16x28x28xf32>
+    return %9 : tensor<?x16x28x28xf32>
+  }
+  "onnx.EntryPoint"() {func = @main_graph} : () -> ()
+}

@@ -18,6 +18,11 @@ namespace onnx_mlir {
 void initOMPasses(int optLevel) {
   // All passes implemented within onnx-mlir should register within this
   // function to make themselves available as a command-line option.
+
+  //   mlir::registerPass([]() -> std::unique_ptr<mlir::Pass> {
+  //   return createTransposeWToConv4Pass();
+  // });
+
   mlir::registerPass([]() -> std::unique_ptr<mlir::Pass> {
     return createONNXOpTransformPass();
   });

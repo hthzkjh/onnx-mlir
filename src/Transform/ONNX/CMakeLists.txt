@@ -63,7 +63,15 @@ add_onnx_mlir_library(OMOpTransform
   OMShapeInference
   MLIRTransforms
   )
+# add_onnx_mlir_library(OMTransposeM
+#   TransposeWPass.cpp 
 
+#   LINK_LIBS PUBLIC
+#   OMONNXOps
+#   MLIRPass
+#   MLIRTransforms
+
+# )
 add_onnx_mlir_library(OMONNXPreKrnlVerifyONNX
   ONNXPreKrnlVerifyPass.cpp
 
