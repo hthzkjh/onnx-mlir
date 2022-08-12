@@ -23,19 +23,20 @@ model_input_name = "X"
 X = onnx.helper.make_tensor_value_info(model_input_name,
                                         onnx.TensorProto.FLOAT,
                                         [None, 32, 22, 22])
-model_output_name = "Y"
+model_output_name = "Z"
+# model_output_name = "Y"
 model_output_channels = 16
-Y = onnx.helper.make_tensor_value_info(model_output_name,
+Z = onnx.helper.make_tensor_value_info(model_output_name,
                                         onnx.TensorProto.FLOAT,
-                                        [None, model_output_channels, 18, 18])
+                                        [None, model_output_channels, 18,18])
 
-conv1_output_node_name = model_output_name
+conv1_output_node_name = "Y"
 # Dummy weights for conv.
 conv1_in_channels = 32
 conv1_out_channels = 16
 conv1_kernel_shape = (5, 5)
 conv1_pads = (0, 0, 0, 0)
-conv1_W = np.ones(shape=(1, 4, 4, 2, 16, 
+conv1_W = np.ones(shape=(16, 32, 
                           *conv1_kernel_shape),dtype=np.float32)
 conv1_B = np.ones(shape=(conv1_out_channels)).astype(np.float32)
 # Create the initializer tensor for the weights.
@@ -66,13 +67,15 @@ conv1_node = onnx.helper.make_node(
     pads=conv1_pads,
 )
 
+relu_node = onnx.helper.make_node("Relu", inputs=["Y"], outputs=["Z"])
 
 # Create the graph (GraphProto)
 graph_def = helper.make_graph(
-  [conv1_node],
+  [conv1_node, relu_node],
+    # [conv1_node],
   'test-model',
   [X],
-  [Y],
+  [Z],
   initializer=[
     conv1_W_initializer_tensor, conv1_B_initializer_tensor
   ],
@@ -82,6 +85,6 @@ graph_def = helper.make_graph(
 model_def = helper.make_model(graph_def, producer_name='onnx-example')
 
 print('The model is:\n{}'.format(model_def))
-# onnx.checker.check_model(model_def)
-onnx.save(model_def, "conv2.onnx")
+onnx.checker.check_model(model_def)
+onnx.save(model_def, "conv_relu.onnx")
 print('The model is checked!')

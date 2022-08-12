@@ -199,7 +199,7 @@ struct DecomposeConvPattern : public ConversionPattern {
     // Value shape_ww = rewriter.create<ONNXConstantOp>(odsLoc, nullptr, rewriter.getI64TensorAttr({shape_w[0] / 16, 4, 4, shape_w[1] / 16, 16, shape_w[2], shape_w[3]})).getResult();
     // Value value_w = rewriter.create<ONNXReshapeOp>(odsLoc, reshape_w_Type, w, shape_ww); 
 
-
+    std::cout << shape_3.size() << std::endl;
     Type conv4Type = RankedTensorType::get({shape_3[0], shape_3[1] / 16, shape_3[2], shape_3[3], 16}, type_1);
     Value value3 = rewriter.create<ONNXConv4Op>(odsLoc, conv4Type, transposeOp1,
       convOp.W(), convOp.B(), auto_pad, dilation, group, kernel_shape, pads, stride);

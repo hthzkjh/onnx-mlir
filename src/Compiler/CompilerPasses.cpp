@@ -43,7 +43,7 @@ void addONNXToMLIRPasses(mlir::PassManager &pm) {
   // In future, only the dynamic pass, ONNXOpTransformPass, will be used for
   // this function.
   
-  // pm.addPass(onnx_mlir::createShapeInferencePass());  // add shapeInfer
+  pm.addPass(onnx_mlir::createShapeInferencePass());  // add shapeInfer
   pm.addNestedPass<func::FuncOp>(onnx_mlir::createDecomposeONNXToONNXPass());
   // pm.addPass(onnx_mlir::createTransposeWToConv4Pass()); 
   pm.addPass(onnx_mlir::createShapeInferencePass());

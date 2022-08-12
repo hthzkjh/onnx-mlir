@@ -35,16 +35,16 @@ class Reshape(nn.Module):
 
 
 model = nn.Sequential(
-    nn.Conv2d(16, 16, 3),
+    nn.Conv2d(32, 16, 3),
     nn.ReLU(),
-    Reshape(1,16,4,4) # add new idx 1 (2,1,16,4,4)
+    # Reshape(1,16,4,4) # add new idx 1 (2,1,16,4,4)
 )
 model.apply(weight_init)
 
 
 batch_size = 1
-export_onnx_file = "test3.onnx"			# 目的ONNX文件名
-x = torch.randn(2, 16, 6, 6, requires_grad=True)
+export_onnx_file = "test_relu.onnx"			# 目的ONNX文件名
+x = torch.randn(2, 32, 20, 20, requires_grad=True)
 torch.onnx.export(model,
                     x,
                     export_onnx_file,

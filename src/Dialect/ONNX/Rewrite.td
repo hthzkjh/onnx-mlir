@@ -414,6 +414,21 @@ def SwapTransposeConcatPattern: Pat<
 >;
 
 //===----------------------------------------------------------------------===//
+// Canonicalization for ONNXReluOp when meet cvon4Op
+//===----------------------------------------------------------------------===//
+
+def ProducedByConv4Op:Constraint<
+  CPred<"onnx_mlir::areProducedByConv4Op($_self)">,
+  "all values are produced by ONNXConv4Op"
+>;
+
+def FuseConv4ReluPattern:  Pat<
+   (ONNXReluOp (ONNXReshapeOp (ONNXTransposeOp $v, $p1), $s1)),
+   (ONNXReluOp $v),
+   [(ProducedByConv4Op:$v)]
+>;
+
+//===----------------------------------------------------------------------===//
 // Canonicalization for ONNXReshapeOp
 //===----------------------------------------------------------------------===//
 

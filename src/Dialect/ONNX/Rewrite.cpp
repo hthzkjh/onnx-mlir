@@ -96,6 +96,14 @@ bool areProducedByTransposeOp(ValueRange values) {
   });
 }
 
+bool areProducedByConv4Op(ValueRange values) {
+  return llvm::all_of(values, [](Value v) {
+    if (v.isa<BlockArgument>())
+      return false;
+    return isa<ONNXConv4Op>(v.getDefiningOp());
+  });
+}
+
 } // namespace onnx_mlir
 
 /// Include the patterns defined in the Declarative Rewrite framework.
@@ -442,6 +450,11 @@ void ONNXReshapeOp::getCanonicalizationPatterns(
   result.insert<FuseReshapePattern>(context);
   result.insert<RemoveIdentityReshapePattern>(context);
   result.insert<SwapReshapeMatMulPattern>(context);
+}
+/// on the ONNXReshapeOp.
+void ONNXReluOp::getCanonicalizationPatterns(
+    RewritePatternSet &result, MLIRContext *context) {
+       result.insert<FuseConv4ReluPattern>(context);
 }
 
 /// on the ONNXDropoutOp.

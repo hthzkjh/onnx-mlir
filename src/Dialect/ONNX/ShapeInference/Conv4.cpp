@@ -54,7 +54,8 @@ LogicalResult ONNXConv4OpShapeHelper::computeShape(
       kernelShape.emplace_back(
           LiteralIndexExpr(ArrayAttrIntVal(kernelShapeOpt, i)));
     } else if (hasFilter) {
-      int ii = i + spatialOffset + 3; // W shape
+      int ii = i + spatialOffset; // W shape    // if input W got dims = 7, this += 2 alone is enough for change computeShape!
+      // int ii = i + spatialOffset + 2;
       kernelShape.emplace_back(WBounds.getSymbol(ii)); // what is symbol? shape?
     } else {
       llvm_unreachable("should have tested the availability of kernel shape");
@@ -70,7 +71,8 @@ LogicalResult ONNXConv4OpShapeHelper::computeShape(
   
   outputDims.emplace_back(XBounds.getDim(0));
   if (hasFilter)
-    outputDims.emplace_back(WBounds.getDim(0) * 16); // CO may be different from CI.
+    // outputDims.emplace_back(WBounds.getDim(0) * 16); // CO may be different from CI.
+    outputDims.emplace_back(WBounds.getDim(0));
   // else
   //   outputDims.emplace_back(XBounds.getDim(1)); // CO is CI. 
 
